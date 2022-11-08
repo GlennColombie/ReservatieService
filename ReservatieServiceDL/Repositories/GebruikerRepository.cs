@@ -89,6 +89,30 @@ public class GebruikerRepository : IGebruikerRepository
 
     public IReadOnlyList<Gebruiker> GeefGebruikers()
     {
-        throw new NotImplementedException();
+        using (SqlCommand cmd = _connection.CreateCommand())
+        {
+            try
+            {
+                List<Gebruiker> gebruikers = new();
+                _connection.Open();
+                cmd.CommandText = $"SELECT g.Id GebruikerId, g.Naam, g.Email, g.Telefoonnummer, l.Id LocatieId, l.Gemeente, l.Postcode, l.Straat, l.Huisnummer FROM Gebruiker g left join Locatie l on g.LocatieId = l.Id";
+                SqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    Locatie l = new((int)reader["LocatieId"], (int)reader["Postcode"], (string)reader["Gemeente"], (string)reader["Straat"], (string)reader["Huisnummer"]);
+                    gebruikers.Add(new((int)reader["GebruikerId"], (string)reader["Naam"], (string)reader["Email"], (string)reader["Telefoonnummer"], l));
+                }
+                reader.Close();
+                return gebruikers;
+            }
+            catch (Exception ex)
+            {
+                throw new GebruikerRepositoryException("Kan geen verbinding maken met de database", ex);
+            }
+            finally
+            {
+                _connection.Close();
+            }
+        }
     }
 }
