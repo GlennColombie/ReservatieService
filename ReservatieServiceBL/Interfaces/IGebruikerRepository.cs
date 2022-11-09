@@ -10,7 +10,7 @@ public interface IGebruikerRepository
 
     bool BestaatGebruiker(Gebruiker gebruiker);
     bool BestaatGebruiker(int gebruiker);
-    Gebruiker GeefGebruiker(int gebruikerKlantnr);
+    Gebruiker GeefGebruiker(int id);
 
     IReadOnlyList<Reservatie> ZoekReservaties(DateTime? begindatum, DateTime? einddatum);
     IReadOnlyList<Reservatie> GeefReservaties(DateTime? begindatum, DateTime? einddatum);

@@ -5,19 +5,23 @@ namespace ReservatieServiceBL.Model
     public class Gebruiker
     {
         public int Id { get; private set; }
+        
         public string Naam { get; private set; }
+        
         public string Email { get; private set; }
-        public string TelefoonNr { get; private set; }
+        
+        public string Telefoonnummer { get; private set; }
+        
         public Locatie Locatie { get; private set; }
 
         private List<Reservatie> _reservaties = new();
 
-        public Gebruiker(int id, string naam, string email, string nr, Locatie locatie)
+        public Gebruiker(int id, string naam, string email, string telefoonnummer, Locatie locatie)
         {
             ZetId(id);
             ZetNaam(naam);
             ZetEmail(email);
-            ZetTelefoonnr(nr);
+            ZetTelefoonnr(telefoonnummer);
             ZetLocatie(locatie);
         }
         
@@ -39,7 +43,7 @@ namespace ReservatieServiceBL.Model
         public void ZetTelefoonnr(string nr)
         {
             if (string.IsNullOrWhiteSpace(nr)) throw new GebruikerException("ZetNaam - null/whitespace");
-            TelefoonNr = nr;
+            Telefoonnummer = nr;
         }
         public void ZetLocatie(Locatie locatie)
         {
@@ -66,7 +70,7 @@ namespace ReservatieServiceBL.Model
             if (gebruiker == null) throw new GebruikerException("IsDezelfde - null");
             if (!Naam.Equals(gebruiker.Naam)) return false;
             if (!Email.Equals(gebruiker.Email)) return false;
-            if (!TelefoonNr.Equals(gebruiker.TelefoonNr)) return false;
+            if (!Telefoonnummer.Equals(gebruiker.Telefoonnummer)) return false;
             if (!Locatie.IsDezelfde(gebruiker.Locatie)) return false;
             return true;
         }

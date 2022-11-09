@@ -6,6 +6,7 @@ using ReservatieServiceDL;
 
 GebruikerManager gm = new(new GebruikerRepository(@"Data Source=.\SQLEXPRESS;Initial Catalog=ReservatieService;Integrated Security=True"));
 Locatie l = new(1, 9160, "Lokeren", "Hillarestraat", "67");
-Gebruiker g = new(1,"Colombie", "test@test.be", "0494386634", l);
-gm.GebruikerRegistreren(g);
+Locatie l2 = new(2, 9200, "Aalst");
+Gebruiker g = new(1,"Colombie", "test@test.be", "test", l2);
+gm.GebruikerUpdaten(g);
 Console.WriteLine("end");

@@ -24,7 +24,7 @@ public class GebruikerManager
         }
         catch (Exception ex)
         {
-            throw new GebruikerManagerException("Er is een fout opgetreden bij het registreren van de gebruiker", ex);
+            throw new GebruikerManagerException("Er is een fout opgetreden bij het toevoegen van de gebruiker", ex);
         }
     }
 
@@ -33,10 +33,10 @@ public class GebruikerManager
         if (gebruiker == null) throw new GebruikerManagerException("Gebruiker is null");
         try
         {
-            if (_gebruikerRepository.BestaatGebruiker(gebruiker))
+            if (_gebruikerRepository.BestaatGebruiker(gebruiker.Id))
             {
                 Gebruiker g = _gebruikerRepository.GeefGebruiker(gebruiker.Id);
-                if (g.IsDezelfde(gebruiker)) throw new GebruikerManagerException("Gebruiker bestaat al");
+                if (g.IsDezelfde(gebruiker)) throw new GebruikerManagerException("Gebruiker is hetzelfde");
                 _gebruikerRepository.UpdateGebruiker(gebruiker);
             }
             else throw new GebruikerManagerException("Gebruiker bestaat niet");
