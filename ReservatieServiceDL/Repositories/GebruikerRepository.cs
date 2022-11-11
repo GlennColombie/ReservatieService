@@ -139,6 +139,7 @@ public class GebruikerRepository : IGebruikerRepository
                 string gemeente;
                 string straat;
                 string huisnummer;
+                Locatie l = null;
                 Gebruiker g = null;
                 cmd.CommandText = $"SELECT g.Id, g.Naam, g.Email, g.Telefoonnummer, l.Id LocatieId, l.Postcode, l.Gemeente, l.straat, l.huisnummer" +
                     $" FROM Gebruiker g" +
@@ -156,7 +157,7 @@ public class GebruikerRepository : IGebruikerRepository
                     straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
                     huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
                     
-                    Locatie l = new(postcode, gemeente, straat, huisnummer);
+                    l = new(postcode, gemeente, straat, huisnummer);
                     l.ZetId((int)reader["LocatieId"]);
                     
                     g = new(naam, email, telefoonnummer, l);
@@ -200,6 +201,7 @@ public class GebruikerRepository : IGebruikerRepository
                 string gemeente;
                 string straat;
                 string huisnummer;
+                Locatie l = null;
                 Gebruiker g = null;
                 _connection.Open();
                 cmd.CommandText = $"SELECT g.Id GebruikerId, g.Naam, g.Email, g.Telefoonnummer, l.Id LocatieId, l.Gemeente, l.Postcode, l.Straat, l.Huisnummer FROM Gebruiker g left join Locatie l on g.LocatieId = l.Id";
@@ -214,7 +216,57 @@ public class GebruikerRepository : IGebruikerRepository
                     straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
                     huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
 
-                    Locatie l = new(postcode, gemeente, straat, huisnummer);
+                    l = new(postcode, gemeente, straat, huisnummer);
+                    l.ZetId((int)reader["LocatieId"]);
+
+                    g = new(naam, email, telefoonnummer, l);
+                    g.ZetId((int)reader["GebruikerId"]);
+                    gebruikers.Add(g);
+                }
+                reader.Close();
+                return gebruikers;
+            }
+            catch (Exception ex)
+            {
+                throw new GebruikerRepositoryException("GeefGebruikers - repo", ex);
+            }
+            finally
+            {
+                _connection.Close();
+            }
+        }
+    }
+
+    public IReadOnlyList<Gebruiker> GeefBestaandeGebruikers()
+    {
+        using (SqlCommand cmd = _connection.CreateCommand())
+        {
+            try
+            {
+                List<Gebruiker> gebruikers = new();
+                string naam;
+                string email;
+                string telefoonnummer;
+                int postcode;
+                string gemeente;
+                string straat;
+                string huisnummer;
+                Locatie l = null;
+                Gebruiker g = null;
+                _connection.Open();
+                cmd.CommandText = $"SELECT g.Id GebruikerId, g.Naam, g.Email, g.Telefoonnummer, l.Id LocatieId, l.Gemeente, l.Postcode, l.Straat, l.Huisnummer FROM Gebruiker g left join Locatie l on g.LocatieId = l.Id where is_visible = 1";
+                SqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    naam = (string)reader["Naam"];
+                    email = (string)reader["Email"];
+                    telefoonnummer = (string)reader["Telefoonnummer"];
+                    postcode = (int)reader["Postcode"];
+                    gemeente = (string)reader["Gemeente"];
+                    straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
+                    huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
+
+                    l = new(postcode, gemeente, straat, huisnummer);
                     l.ZetId((int)reader["LocatieId"]);
 
                     g = new(naam, email, telefoonnummer, l);

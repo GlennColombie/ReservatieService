@@ -107,34 +107,34 @@ namespace ReservatieServiceDL.Repositories
             }
         }
 
-        //public Locatie GeefLocatie(int id)
-        //{
-        //    using (SqlCommand cmd = _connection.CreateCommand())
-        //    {
-        //        try
-        //        {
-        //            _connection.Open();
-        //            cmd.CommandText = $"SELECT * from locatie where id = {id}";
-        //            SqlDataReader reader = cmd.ExecuteReader();
-        //            while (reader.Read())
-        //            {
-        //                int postcode = (int)reader["postcode"];
-        //                string gemeente = (string)reader["gemeente"];
-        //                string straat = (string)reader["straat"];
-        //                string huisnummer = (string)reader["huisnummer"];
-        //                return new Locatie(id, postcode, gemeente, straat, huisnummer);
-        //            }
-        //            return null;
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            throw new LocatieRepositoryException("BestaatLocatie - repo", ex);
-        //        }
-        //        finally
-        //        {
-        //            _connection.Close();
-        //        }
-        //    }
-        //}
+        public Locatie GeefLocatie(Locatie locatie)
+        {
+            using (SqlCommand cmd = _connection.CreateCommand())
+            {
+                try
+                {
+                    _connection.Open();
+                    cmd.CommandText = $"SELECT * from locatie where postcode = {locatie.Postcode} AND gemeente = '{locatie.Gemeente}' and straat = '{locatie.Straat}' and huisnummer = '{locatie.Huisnummer}'";
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        int postcode = (int)reader["postcode"];
+                        string gemeente = (string)reader["gemeente"];
+                        string straat = (string)reader["straat"];
+                        string huisnummer = (string)reader["huisnummer"];
+                        return new Locatie((int)reader["id"], postcode, gemeente, straat, huisnummer);
+                    }
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    throw new LocatieRepositoryException("BestaatLocatie - repo", ex);
+                }
+                finally
+                {
+                    _connection.Close();
+                }
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using ReservatieServiceBL.Exceptions;
 
@@ -9,11 +10,21 @@ namespace ReservatieServiceBL.Model
 {
     public class Restaurant
     {
-        public Restaurant(string naam, Locatie locatie, string telefoonnr, string email, Keuken keuken)
+        [JsonConstructor]
+        public Restaurant (int id, string naam, Locatie locatie, string telefoonnummer, string email, Keuken keuken)
+        {
+            ZetId(id);
+            ZetNaam(naam);
+            ZetLocatie(locatie);
+            ZetTelefoonnummer(telefoonnummer);
+            ZetEmail(email);
+            ZetKeuken(keuken);
+        }
+        public Restaurant(string naam, Locatie locatie, string telefoonnummer, string email, Keuken keuken)
         {
             ZetNaam(naam);
             ZetLocatie(locatie);
-            ZetTelefoon(telefoonnr);
+            ZetTelefoonnummer(telefoonnummer);
             ZetEmail(email);
             ZetKeuken(keuken);
         }
@@ -21,12 +32,17 @@ namespace ReservatieServiceBL.Model
         public int Id { get; set; }
         public string Naam { get; private set; }
         public Locatie Locatie { get; private set; }
-        public string Telefoon { get; private set; }
+        public string Telefoonnummer { get; private set; }
         public string Email { get; private set; }
         public Keuken Keuken { get; private set; }
 
         private List<Reservatie> _reservaties = new();
 
+        public void ZetId(int id)
+        {
+            if (id < 0) throw new RestaurantException("Id < 0");
+            Id = id;
+        }
         public void ZetNaam(string naam)
         {
             if (string.IsNullOrWhiteSpace(naam)) throw new RestaurantException("Naam mag niet leeg zijn");
@@ -39,10 +55,10 @@ namespace ReservatieServiceBL.Model
             Locatie = locatie;
         }
         
-        public void ZetTelefoon(string telefoon)
+        public void ZetTelefoonnummer(string telefoon)
         {
-            if (string.IsNullOrWhiteSpace(telefoon)) throw new RestaurantException("Telefoon mag niet leeg zijn");
-            Telefoon = telefoon;
+            if (string.IsNullOrWhiteSpace(telefoon)) throw new RestaurantException("Telefoonnummer mag niet leeg zijn");
+            Telefoonnummer = telefoon;
         }
         
         public void ZetEmail(string email)
@@ -75,6 +91,19 @@ namespace ReservatieServiceBL.Model
             if (_reservaties.Contains(reservatie)) throw new RestaurantException("Reservatie bestaat al");
             _reservaties.Add(reservatie);
             if (reservatie.Restaurant != this || reservatie.Restaurant == null) reservatie.ZetRestaurant(this);
+        }
+        
+        public bool IsHetzelfde(Restaurant restaurant)
+        {
+            if (restaurant == null) throw new RestaurantException("IsHetzelfde - null");
+            if (!restaurant.Naam.Equals(Naam)) return false;
+            if (!restaurant.Locatie.IsDezelfde(Locatie)) return false;
+            if (!restaurant.Telefoonnummer.Equals(Telefoonnummer)) return false;
+            if (!restaurant.Email.Equals(Email)) return false;
+            if (!restaurant.Keuken.ToString().Equals(Keuken)) return false;
+            return true;
+            {
+            }
         }
     }
 }

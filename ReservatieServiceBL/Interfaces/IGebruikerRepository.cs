@@ -15,4 +15,5 @@ public interface IGebruikerRepository
     IReadOnlyList<Reservatie> ZoekReservaties(DateTime? begindatum, DateTime? einddatum);
     IReadOnlyList<Reservatie> GeefReservaties(DateTime? begindatum, DateTime? einddatum);
     IReadOnlyList<Gebruiker> GeefGebruikers();
+    IReadOnlyList<Gebruiker> GeefBestaandeGebruikers();
 }

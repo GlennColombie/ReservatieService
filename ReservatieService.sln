@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReservatieServiceDL", "Rese
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{E46097DF-6637-4137-8895-36327EC15A9E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReservatieServiceRESTService", "ReservatieServiceRESTService\ReservatieServiceRESTService.csproj", "{1CB330C2-D890-4F5D-B4CE-CA881EEEA91F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReservatieServiceGebruikerRESTService", "ReservatieServiceRESTService\ReservatieServiceGebruikerRESTService.csproj", "{1CB330C2-D890-4F5D-B4CE-CA881EEEA91F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReservatieServiceBeheerderRESTService", "ReservatieServiceBeheerderRESTService\ReservatieServiceBeheerderRESTService.csproj", "{A16284BD-043B-48B4-B9EA-0BC8800CF979}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{1CB330C2-D890-4F5D-B4CE-CA881EEEA91F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1CB330C2-D890-4F5D-B4CE-CA881EEEA91F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1CB330C2-D890-4F5D-B4CE-CA881EEEA91F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A16284BD-043B-48B4-B9EA-0BC8800CF979}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A16284BD-043B-48B4-B9EA-0BC8800CF979}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A16284BD-043B-48B4-B9EA-0BC8800CF979}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A16284BD-043B-48B4-B9EA-0BC8800CF979}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

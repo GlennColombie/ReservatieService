@@ -21,6 +21,7 @@ public class RestaurantManager
         {
             if (_restaurantRepository.BestaatRestaurant(restaurant)) throw new RestaurantException("VoegRestaurantToe - bestaat al");
             if (!_locatieRepository.BestaatLocatie(restaurant.Locatie)) _locatieRepository.VoegLocatieToe(restaurant.Locatie);
+            restaurant.ZetLocatie(_locatieRepository.GeefLocatie(restaurant.Locatie));
             _restaurantRepository.VoegRestaurantToe(restaurant);
         }
         catch (Exception ex)
@@ -34,10 +35,15 @@ public class RestaurantManager
         if (restaurant == null) throw new RestaurantException("UpdateRestaurant - null");
         try
         {
-            Restaurant r = _restaurantRepository.GeefRestaurant(restaurant.Id);
-            if (!_restaurantRepository.BestaatRestaurant(restaurant)) throw new RestaurantException("UpdateRestaurant - bestaat niet");
-            if ()
-            _restaurantRepository.UpdateRestaurant(restaurant);
+
+            if (_restaurantRepository.BestaatRestaurant(restaurant))
+            {
+                Restaurant r = _restaurantRepository.GeefRestaurant(restaurant.Id);
+                if (r.IsHetzelfde(restaurant)) throw new RestaurantManagerException("UpdateRestaurant - IsHetzelfde");
+                if (!_locatieRepository.BestaatLocatie(restaurant.Locatie)) _locatieRepository.VoegLocatieToe(restaurant.Locatie);
+                _restaurantRepository.UpdateRestaurant(restaurant);
+            }
+            else throw new RestaurantManagerException("UpdateRestaurant - bestaat niet");
         }
         catch (Exception ex)
         {
@@ -50,7 +56,7 @@ public class RestaurantManager
         if (restaurant == null) throw new RestaurantException("VerwijderRestaurant - null");
         try
         {
-            if (!_restaurantRepository.BestaatRestaurant(restaurant)) throw new RestaurantException("VerwijderRestaurant - bestaat niet");
+            if (!_restaurantRepository.BestaatRestaurant(restaurant)) throw new RestaurantManagerException("VerwijderRestaurant - bestaat niet");
             _restaurantRepository.VerwijderRestaurant(restaurant);
         }
         catch (Exception ex)
@@ -59,7 +65,7 @@ public class RestaurantManager
         }
     }
 
-    public List<Restaurant> GeefAlleRestaurants()
+    public IReadOnlyList<Restaurant> GeefAlleRestaurants()
     {
         try
         {
@@ -75,6 +81,8 @@ public class RestaurantManager
     {
         try
         {
+            if (id < 0) throw new RestaurantManagerException("Id < 0");
+            if (!_restaurantRepository.BestaatRestaurant(id)) throw new RestaurantManagerException("GeefRestaurant - bestaat niet");
             return _restaurantRepository.GeefRestaurant(id);
         }
         catch (Exception ex)
@@ -83,7 +91,7 @@ public class RestaurantManager
         }
     }
 
-    public List<Restaurant> GeefRestaurantsVanLocatie(Locatie locatie)
+    public IReadOnlyList<Restaurant> GeefRestaurantsVanLocatie(Locatie locatie)
     {
         if (locatie == null) throw new RestaurantException("GeefRestaurantsVanLocatie - null");
         try
@@ -96,27 +104,39 @@ public class RestaurantManager
         }
     }
 
-    public List<Restaurant> GeefRestaurantsVanLocatie(int locatieId)
+    public IReadOnlyList<Restaurant> GeefAlleBestaandRestaurants()
     {
         try
         {
-            return _restaurantRepository.GeefRestaurantsVanLocatie(locatieId);
+            return _restaurantRepository.GeefAlleBestaandeRestaurants();
         }
         catch (Exception ex)
         {
-            throw new RestaurantException("GeefRestaurantsVanLocatie", ex);
+            throw new ReservatieManagerException("GeefAlleBestaandeRestaurants", ex);
         }
     }
 
-    public List<Restaurant> GeefRestaurantsVanLocatie(string locatieNaam)
-    {
-        try
-        {
-            return _restaurantRepository.GeefRestaurantsVanLocatie(locatieNaam);
-        }
-        catch (Exception ex)
-        {
-            throw new RestaurantException("GeefRestaurantsVanLocatie", ex);
-        }
-    }
+    //public List<Restaurant> GeefRestaurantsVanLocatie(int locatieId)
+    //{
+    //    try
+    //    {
+    //        return _restaurantRepository.GeefRestaurantsVanLocatie(locatieId);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        throw new RestaurantException("GeefRestaurantsVanLocatie", ex);
+    //    }
+    //}
+
+    //public List<Restaurant> GeefRestaurantsVanLocatie(string locatieNaam)
+    //{
+    //    try
+    //    {
+    //        return _restaurantRepository.GeefRestaurantsVanLocatie(locatieNaam);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        throw new RestaurantException("GeefRestaurantsVanLocatie", ex);
+    //    }
+    //}
 }

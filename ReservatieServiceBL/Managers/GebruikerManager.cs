@@ -22,6 +22,7 @@ public class GebruikerManager
         {
             if (_gebruikerRepository.BestaatGebruiker(gebruiker)) throw new GebruikerManagerException("Gebruiker bestaat al");
             if (!_locatieRepository.BestaatLocatie(gebruiker.Locatie)) _locatieRepository.VoegLocatieToe(gebruiker.Locatie);
+            gebruiker.ZetLocatie(_locatieRepository.GeefLocatie(gebruiker.Locatie));
             _gebruikerRepository.GebruikerRegistreren(gebruiker);
         }
         catch (Exception ex)
@@ -82,9 +83,19 @@ public class GebruikerManager
     {
         try
         {
-            List<Gebruiker> gebruikers = new();
-            gebruikers.AddRange(_gebruikerRepository.GeefGebruikers());
-            return gebruikers;
+            return _gebruikerRepository.GeefGebruikers();
+        }
+        catch (Exception ex)
+        {
+            throw new GebruikerManagerException("Er is een fout opgetreden bij het ophalen van de gebruikers", ex);
+        }
+    }
+
+    public IReadOnlyList<Gebruiker> GeefBestaandeGebruikers()
+    {
+        try
+        {
+            return _gebruikerRepository.GeefBestaandeGebruikers();
         }
         catch (Exception ex)
         {

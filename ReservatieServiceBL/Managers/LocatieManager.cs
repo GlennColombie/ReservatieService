@@ -54,4 +54,18 @@ public class LocatieManager
             throw new LocatieManagerException("VerwijderLocatie", ex);
         }
     }
+
+    public Locatie GeefLocatie(Locatie locatie)
+    {
+        if (locatie == null) throw new LocatieManagerException("GeefLocatie - null");
+        try
+        {
+            if (!_locatieRepository.BestaatLocatie(locatie)) throw new LocatieManagerException("GeefLocatie - bestaat niet");
+            return _locatieRepository.GeefLocatie(locatie);
+        }
+        catch (Exception ex)
+        {
+            throw new LocatieManagerException("GeefLocatie", ex);
+        }
+    }
 }

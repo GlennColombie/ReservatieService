@@ -8,4 +8,5 @@ public interface ILocatieRepository
     bool BestaatLocatie(Locatie locatie);
     void UpdateLocatie(Locatie locatie);
     void VerwijderLocatie(Locatie locatie);
+    Locatie GeefLocatie(Locatie locatie);
 }
