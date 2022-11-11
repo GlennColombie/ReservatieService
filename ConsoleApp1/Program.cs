@@ -17,5 +17,5 @@ Locatie l2 = new(9200, "Aalst");
 //g.ZetNaam("test25");
 //gm.GebruikerUpdaten(g);
 Restaurant r = new("Cardis", l, "testcardis", "testcardis", Keuken.Belgisch);
-rm.VoegRestaurantToe(r);
+List<Restaurant> restaurants = (List<Restaurant>)rm.GeefAlleRestaurants();
 Console.WriteLine("end");

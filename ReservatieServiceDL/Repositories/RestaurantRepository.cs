@@ -75,10 +75,10 @@ namespace ReservatieServiceDL.Repositories
                     Locatie l = null;
                     Restaurant r = null;
                     List<Restaurant> restaurants = new();
-                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer " +
+                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer " +
                         $"from Restaurant r " +
                         $"left join locatie l on r.locatieid = l.id " +
-                        $"where is_visible = 1";
+                        $"where r.is_visible = 1";
                     SqlDataReader reader = cmd.ExecuteReader();
                     while (reader.Read())
                     {
@@ -130,7 +130,7 @@ namespace ReservatieServiceDL.Repositories
                     Locatie l = null;
                     Restaurant r = null;
                     List<Restaurant> restaurants = new();
-                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer " +
+                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer " +
                         $"from Restaurant r " +
                         $"left join locatie l on r.locatieid = l.id";
                     SqlDataReader reader = cmd.ExecuteReader();
@@ -183,10 +183,10 @@ namespace ReservatieServiceDL.Repositories
                     Keuken keuken;
                     Locatie l = null;
                     Restaurant r = null;
-                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer " +
+                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer " +
                         $"from Restaurant r " +
                         $"left join locatie l on r.locatieid = l.id " +
-                        $"where id = {id}";
+                        $"where r.id = {id}";
                     SqlDataReader reader = cmd.ExecuteReader();
                     while (reader.Read())
                     {
@@ -232,7 +232,7 @@ namespace ReservatieServiceDL.Repositories
                 try
                 {
                     _connection.Open();
-                    cmd.CommandText = $"update restaurant naam = {restaurant.Naam}, email = {restaurant.Email}, telefoonnummer = {restaurant.Telefoonnummer}, keuken = {restaurant.Keuken} where id = {restaurant.Id}";
+                    cmd.CommandText = $"update restaurant set naam = '{restaurant.Naam}', email = '{restaurant.Email}', telefoonnummer = '{restaurant.Telefoonnummer}', keuken = '{restaurant.Keuken}' where id = {restaurant.Id}";
                     cmd.ExecuteNonQuery();
                 }
                 catch (Exception ex)
@@ -253,7 +253,7 @@ namespace ReservatieServiceDL.Repositories
                 try
                 {
                     _connection.Open();
-                    cmd.CommandText = $"update restaurant is_visible = 0";
+                    cmd.CommandText = $"update restaurant set is_visible = 0 where id = {restaurant.Id}";
                     cmd.ExecuteNonQuery();
                 }
                 catch (Exception ex)

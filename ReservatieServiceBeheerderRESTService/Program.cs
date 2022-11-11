@@ -1,13 +1,17 @@
 using ReservatieServiceBL.Interfaces;
 using ReservatieServiceBL.Managers;
 using ReservatieServiceDL.Repositories;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=ReservatieService;Integrated Security=True";
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 builder.Services.AddSingleton<IRestaurantRepository>(r => new RestaurantRepository(connectionString));
 builder.Services.AddSingleton<RestaurantManager>();
 builder.Services.AddSingleton<ILocatieRepository>(r => new LocatieRepository(connectionString));

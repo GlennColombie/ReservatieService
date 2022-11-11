@@ -36,7 +36,7 @@ public class RestaurantManager
         try
         {
 
-            if (_restaurantRepository.BestaatRestaurant(restaurant))
+            if (_restaurantRepository.BestaatRestaurant(restaurant.Id))
             {
                 Restaurant r = _restaurantRepository.GeefRestaurant(restaurant.Id);
                 if (r.IsHetzelfde(restaurant)) throw new RestaurantManagerException("UpdateRestaurant - IsHetzelfde");
@@ -104,7 +104,7 @@ public class RestaurantManager
         }
     }
 
-    public IReadOnlyList<Restaurant> GeefAlleBestaandRestaurants()
+    public IReadOnlyList<Restaurant> GeefAlleBestaandeRestaurants()
     {
         try
         {

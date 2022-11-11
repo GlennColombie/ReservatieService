@@ -100,10 +100,8 @@ namespace ReservatieServiceBL.Model
             if (!restaurant.Locatie.IsDezelfde(Locatie)) return false;
             if (!restaurant.Telefoonnummer.Equals(Telefoonnummer)) return false;
             if (!restaurant.Email.Equals(Email)) return false;
-            if (!restaurant.Keuken.ToString().Equals(Keuken)) return false;
+            if (!restaurant.Keuken.ToString().Equals(Keuken.ToString())) return false;
             return true;
-            {
-            }
         }
     }
 }

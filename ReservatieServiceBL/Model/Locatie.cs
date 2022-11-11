@@ -43,7 +43,7 @@ namespace ReservatieServiceBL.Model
         
         public void ZetPostcode(int postcode)
         {
-            if (postcode is < 0 or > 9999) throw new LocatieException("Postcode mag niet kleiner zijn dan 0 of groter dan 9999");
+            if (postcode.ToString().Length < 4 || postcode.ToString().Length > 4) throw new LocatieException("Postcode moet 4 cijfers bevatten");
             Postcode = postcode;
         }
         

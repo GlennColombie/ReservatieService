@@ -27,6 +27,7 @@ namespace ReservatieServiceBL.Model
         public int AantalPlaatsen { get; private set; }
         public DateTime Datum { get; set; }
         public DateTime Uur { get; set; }
+        public DateTime Einduur => Uur.AddHours(1.5);
 
         public int Tafelnummer { get; private set; }
         
