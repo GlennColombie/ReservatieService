@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using ReservatieServiceBL.Exceptions;
 
@@ -9,6 +10,7 @@ namespace ReservatieServiceBL.Model
 {
     public class Locatie
     {
+        [JsonConstructor]
         public Locatie(int id, int postcode, string gemeente, string straat = null, string huisnummer = null)
         {
             ZetId(id);
@@ -16,8 +18,17 @@ namespace ReservatieServiceBL.Model
             ZetGemeente(gemeente);
             ZetStraat(straat);
             ZetHuisnummer(huisnummer);
-            
+
         }
+        public Locatie(int postcode, string gemeente, string straat = null, string huisnummer = null)
+        {
+            ZetPostcode(postcode);
+            ZetGemeente(gemeente);
+            ZetStraat(straat);
+            ZetHuisnummer(huisnummer);
+
+        }
+
         public int Id { get; private set; }
         public int Postcode { get; private set; }
         public string Gemeente { get; private set; }

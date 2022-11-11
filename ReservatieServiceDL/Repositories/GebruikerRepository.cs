@@ -22,7 +22,7 @@ public class GebruikerRepository : IGebruikerRepository
             try
             {
                 _connection.Open();
-                cmd.CommandText = $"INSERT INTO Gebruiker (Naam, Email, Telefoonnummer, LocatieId) output INSERTED.Id VALUES ('{gebruiker.Naam}', '{gebruiker.Email}', '{gebruiker.Telefoonnummer}', '{gebruiker.Locatie.Id}')";
+                cmd.CommandText = $"INSERT INTO Gebruiker (Naam, Email, Telefoonnummer, LocatieId, Is_visible) output INSERTED.Id VALUES ('{gebruiker.Naam}', '{gebruiker.Email}', '{gebruiker.Telefoonnummer}', '{gebruiker.Locatie.Id}', 1)";
                 int id = (int)cmd.ExecuteScalar();
                 gebruiker.ZetId(id);
             }
@@ -66,7 +66,8 @@ public class GebruikerRepository : IGebruikerRepository
             try
             {
                 _connection.Open();
-                cmd.CommandText = $"DELETE FROM Gebruiker WHERE Id = '{gebruiker.Id}'";
+                cmd.CommandText = $"UPDATE Gebruiker SET Is_visible = 0 " +
+                    $" WHERE Id = '{gebruiker.Id}'";
                 cmd.ExecuteNonQuery();
             }
             catch (Exception ex)
@@ -131,6 +132,11 @@ public class GebruikerRepository : IGebruikerRepository
             try
             {
                 _connection.Open();
+                string naam;
+                string email;
+                string telefoonnummer;
+                int postcode;
+                string gemeente;
                 string straat;
                 string huisnummer;
                 Gebruiker g = null;
@@ -142,9 +148,19 @@ public class GebruikerRepository : IGebruikerRepository
                 SqlDataReader reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
+                    naam = (string)reader["Naam"];
+                    email = (string)reader["Email"];
+                    telefoonnummer = (string)reader["Telefoonnummer"];
+                    postcode = (int)reader["Postcode"];
+                    gemeente = (string)reader["Gemeente"];
                     straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
                     huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
-                    g = new((int)reader["id"], (string)reader["naam"], (string)reader["email"], (string)reader["telefoonnummer"], new Locatie((int)reader["LocatieId"], (int)reader["postcode"], (string)reader["gemeente"], straat, huisnummer));
+                    
+                    Locatie l = new(postcode, gemeente, straat, huisnummer);
+                    l.ZetId((int)reader["LocatieId"]);
+                    
+                    g = new(naam, email, telefoonnummer, l);
+                    g.ZetId((int)reader["Id"]);
                 }
                 reader.Close();
                 return g;
@@ -177,17 +193,33 @@ public class GebruikerRepository : IGebruikerRepository
             try
             {
                 List<Gebruiker> gebruikers = new();
+                string naam;
+                string email;
+                string telefoonnummer;
+                int postcode;
+                string gemeente;
                 string straat;
                 string huisnummer;
+                Gebruiker g = null;
                 _connection.Open();
                 cmd.CommandText = $"SELECT g.Id GebruikerId, g.Naam, g.Email, g.Telefoonnummer, l.Id LocatieId, l.Gemeente, l.Postcode, l.Straat, l.Huisnummer FROM Gebruiker g left join Locatie l on g.LocatieId = l.Id";
                 SqlDataReader reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
+                    naam = (string)reader["Naam"];
+                    email = (string)reader["Email"];
+                    telefoonnummer = (string)reader["Telefoonnummer"];
+                    postcode = (int)reader["Postcode"];
+                    gemeente = (string)reader["Gemeente"];
                     straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
                     huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
-                    Locatie l = new((int)reader["LocatieId"], (int)reader["Postcode"], (string)reader["Gemeente"], straat, huisnummer);
-                    gebruikers.Add(new((int)reader["GebruikerId"], (string)reader["Naam"], (string)reader["Email"], (string)reader["Telefoonnummer"], l));
+
+                    Locatie l = new(postcode, gemeente, straat, huisnummer);
+                    l.ZetId((int)reader["LocatieId"]);
+
+                    g = new(naam, email, telefoonnummer, l);
+                    g.ZetId((int)reader["GebruikerId"]);
+                    gebruikers.Add(g);
                 }
                 reader.Close();
                 return gebruikers;

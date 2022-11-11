@@ -7,10 +7,12 @@ namespace ReservatieServiceBL.Managers;
 public class GebruikerManager
 {
     private IGebruikerRepository _gebruikerRepository;
+    private ILocatieRepository _locatieRepository;
 
-    public GebruikerManager(IGebruikerRepository gebruikerRepository)
+    public GebruikerManager(IGebruikerRepository gebruikerRepository, ILocatieRepository locatieRepository)
     {
         _gebruikerRepository = gebruikerRepository;
+        _locatieRepository = locatieRepository;
     }
 
     public void GebruikerRegistreren(Gebruiker gebruiker)
@@ -18,8 +20,8 @@ public class GebruikerManager
         if (gebruiker == null) throw new GebruikerManagerException("Gebruiker is null");
         try
         {
-            if (_gebruikerRepository.BestaatGebruiker(gebruiker))
-                throw new GebruikerManagerException("Gebruiker bestaat al");
+            if (_gebruikerRepository.BestaatGebruiker(gebruiker)) throw new GebruikerManagerException("Gebruiker bestaat al");
+            if (!_locatieRepository.BestaatLocatie(gebruiker.Locatie)) _locatieRepository.VoegLocatieToe(gebruiker.Locatie);
             _gebruikerRepository.GebruikerRegistreren(gebruiker);
         }
         catch (Exception ex)
@@ -37,6 +39,7 @@ public class GebruikerManager
             {
                 Gebruiker g = _gebruikerRepository.GeefGebruiker(gebruiker.Id);
                 if (g.IsDezelfde(gebruiker)) throw new GebruikerManagerException("Gebruiker is hetzelfde");
+                if (!_locatieRepository.BestaatLocatie(gebruiker.Locatie)) _locatieRepository.VoegLocatieToe(gebruiker.Locatie);
                 _gebruikerRepository.UpdateGebruiker(gebruiker);
             }
             else throw new GebruikerManagerException("Gebruiker bestaat niet");

@@ -18,6 +18,7 @@ namespace ReservatieServiceBL.Model
             ZetKeuken(keuken);
         }
         
+        public int Id { get; set; }
         public string Naam { get; private set; }
         public Locatie Locatie { get; private set; }
         public string Telefoon { get; private set; }

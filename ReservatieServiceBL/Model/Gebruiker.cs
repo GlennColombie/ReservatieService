@@ -1,4 +1,5 @@
 ﻿using ReservatieServiceBL.Exceptions;
+using System.Text.Json.Serialization;
 
 namespace ReservatieServiceBL.Model
 {
@@ -16,6 +17,7 @@ namespace ReservatieServiceBL.Model
 
         private List<Reservatie> _reservaties = new();
 
+        [JsonConstructor]
         public Gebruiker(int id, string naam, string email, string telefoonnummer, Locatie locatie)
         {
             ZetId(id);
@@ -24,7 +26,15 @@ namespace ReservatieServiceBL.Model
             ZetTelefoonnr(telefoonnummer);
             ZetLocatie(locatie);
         }
-        
+        public Gebruiker(string naam, string email, string telefoonnummer, Locatie locatie)
+        {
+            ZetNaam(naam);
+            ZetEmail(email);
+            ZetTelefoonnr(telefoonnummer);
+            ZetLocatie(locatie);
+        }
+
+
         public void ZetId(int nr)
         {
             if (nr < 0) throw new GebruikerException("ZetKlantnr - <0");
