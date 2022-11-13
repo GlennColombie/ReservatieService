@@ -14,6 +14,11 @@ builder.Services.AddSingleton<IGebruikerRepository>(r => new GebruikerRepository
 builder.Services.AddSingleton<ILocatieRepository>(r => new LocatieRepository(connectionString));
 builder.Services.AddSingleton<GebruikerManager>();
 builder.Services.AddSingleton<LocatieManager>();
+builder.Services.AddSingleton<IRestaurantRepository>(r => new RestaurantRepository(connectionString));
+builder.Services.AddSingleton<RestaurantManager>();
+builder.Services.AddSingleton<ITafelRepository>(r => new TafelRepository(connectionString));
+builder.Services.AddSingleton<TafelManager>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

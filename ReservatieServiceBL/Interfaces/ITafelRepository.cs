@@ -9,10 +9,11 @@ namespace ReservatieServiceBL.Interfaces
 {
     public interface ITafelRepository
     {
-        void AddTafel(Tafel tafel, Restaurant restaurant);
-        void DeleteTafel(Tafel tafel, Restaurant restaurant);
+        void VoegTafelToe(Tafel tafel, Restaurant restaurant);
+        void VerwijderTafel(Tafel tafel, Restaurant restaurant);
         void UpdateTafel(Tafel tafel, Restaurant restaurant);
         Tafel GeefTafel(int tafelnummer, Restaurant restaurant);
+        bool BestaatTafel(int tafelnummer, Restaurant restaurant);
         //List<Tafel> GeefTafels();
     }
 }

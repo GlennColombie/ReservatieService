@@ -85,5 +85,55 @@ namespace ReservatieServiceBeheerderRESTService.Controllers
                 return BadRequest(e.Message);
             }
         }
+
+        [HttpPost]
+        [Route("{id}/Tafels")]
+        public ActionResult<Tafel> Post(int id, [FromBody] Tafel tafel)
+        {
+            if (id <= 0) return BadRequest("Id is niet geldig");
+            if (tafel == null) return BadRequest("Tafel is null");
+            try
+            {
+                Restaurant restaurant = _rM.GeefRestaurant(id);
+                _rM.VoegTafelToe(tafel, restaurant);
+                return Ok(tafel);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+        
+        [HttpGet]
+        [Route("{id}/Tafels")]
+        public ActionResult<List<Tafel>> GetTafels(int id)
+        {
+            if (id <= 0) return BadRequest("Id is niet geldig");
+            try
+            {
+                return Ok(_rM.GeefAlleTafelsVanRestaurant(id));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpDelete]
+        [Route("{id}/Tafels/{tafelId}")]
+        public IActionResult DeleteTafel(int id, int tafelId)
+        {
+            if (id <= 0) return BadRequest("Id is niet geldig");
+            if (tafelId <= 0) return BadRequest("TafelId is niet geldig");
+            try
+            {
+                _rM.VerwijderTafel(_rM.GeefTafel(tafelId));
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
     }
 }

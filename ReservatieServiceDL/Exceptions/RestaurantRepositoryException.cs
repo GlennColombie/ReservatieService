@@ -8,6 +8,10 @@ namespace ReservatieServiceDL.Exceptions
 {
     public class RestaurantRepositoryException : Exception
     {
+        public RestaurantRepositoryException(string? message) : base(message)
+        {
+        }
+
         public RestaurantRepositoryException(string? message, Exception? innerException) : base(message, innerException)
         {
         }

@@ -93,18 +93,18 @@ public class RestaurantManager
         }
     }
 
-    public IReadOnlyList<Restaurant> GeefRestaurantsVanLocatie(Locatie locatie)
-    {
-        if (locatie == null) throw new RestaurantException("GeefRestaurantsVanLocatie - null");
-        try
-        {
-            return _restaurantRepository.GeefRestaurantsVanLocatie(locatie);
-        }
-        catch (Exception ex)
-        {
-            throw new RestaurantException("GeefRestaurantsVanLocatie", ex);
-        }
-    }
+    //public IReadOnlyList<Restaurant> GeefRestaurantsVanLocatie(Locatie locatie)
+    //{
+    //    if (locatie == null) throw new RestaurantException("GeefRestaurantsVanLocatie - null");
+    //    try
+    //    {
+    //        return _restaurantRepository.GeefRestaurantsVanLocatie(locatie);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        throw new RestaurantException("GeefRestaurantsVanLocatie", ex);
+    //    }
+    //}
 
     public IReadOnlyList<Restaurant> GeefAlleBestaandeRestaurants()
     {
@@ -118,28 +118,28 @@ public class RestaurantManager
         }
     }
 
-    public IReadOnlyList<Tafel> GeefAlleTafelsVanRestaurant(Restaurant restaurant)
+    public IReadOnlyList<Tafel> GeefAlleTafelsVanRestaurant(int id)
     {
-        if (restaurant == null) throw new RestaurantException("GeefAlleTafels - null");
         try
         {
-            if (!_restaurantRepository.BestaatRestaurant(restaurant)) throw new RestaurantManagerException("GeefAlleTafels - bestaat niet");
-            return _restaurantRepository.GeefAlleTafelsVanRestaurant(restaurant);
+            if (id < 0) throw new RestaurantManagerException("Id < 0");
+            if (!_restaurantRepository.BestaatRestaurant(id)) throw new RestaurantManagerException("GeefAlleTafelsVanRestaurant - bestaat niet");
+            return _restaurantRepository.GeefAlleTafelsVanRestaurant(id);
         }
         catch (Exception ex)
         {
-            throw new RestaurantException("GeefAlleTafels", ex);
+            throw new RestaurantException("GeefAlleTafelsVanRestaurant", ex);
         }
     }
 
-    public void AddTafel(Tafel tafel, Restaurant restaurant)
+    public void VoegTafelToe(Tafel tafel, Restaurant restaurant)
     {
         if (tafel == null) throw new RestaurantManagerException("AddTafel: Tafel mag niet null zijn");
         if (restaurant == null) throw new RestaurantManagerException("AddTafel: Restaurant mag niet null zijn");
         try
         {
-            if (_restaurantRepository.GeefAlleTafelsVanRestaurant(restaurant).Contains(tafel)) throw new RestaurantManagerException("AddTafel: Tafel bestaat al");
-            _tafelRepository.AddTafel(tafel, restaurant);
+            if (_restaurantRepository.GeefAlleTafelsVanRestaurant(restaurant.Id).Contains(tafel)) throw new RestaurantManagerException("AddTafel: Tafel bestaat al");
+            _tafelRepository.VoegTafelToe(tafel, restaurant);
             restaurant.VoegTafelToe(tafel);
         }
         catch (Exception ex)
@@ -148,14 +148,14 @@ public class RestaurantManager
         }
     }
 
-    public void DeleteTafel(Tafel tafel, Restaurant restaurant)
+    public void VerwijderTafel(Tafel tafel, Restaurant restaurant)
     {
         if (tafel == null) throw new RestaurantManagerException("DeleteTafel: Tafel mag niet null zijn");
         if (restaurant == null) throw new RestaurantManagerException("DeleteTafel: Restaurant mag niet null zijn");
         try
         {
-            if (!_restaurantRepository.GeefAlleTafelsVanRestaurant(restaurant).Contains(tafel)) throw new RestaurantManagerException("DeleteTafel: Tafel bestaat niet");
-            _tafelRepository.DeleteTafel(tafel, restaurant);
+            if (!_restaurantRepository.GeefAlleTafelsVanRestaurant(restaurant.Id).Contains(tafel)) throw new RestaurantManagerException("DeleteTafel: Tafel bestaat niet");
+            _tafelRepository.VerwijderTafel(tafel, restaurant);
             restaurant.VerwijderTafel(tafel);
         }
         catch (Exception ex)
@@ -170,13 +170,60 @@ public class RestaurantManager
         if (restaurant == null) throw new RestaurantManagerException("UpdateTafel: Restaurant mag niet null zijn");
         try
         {
-            if (!_restaurantRepository.GeefAlleTafelsVanRestaurant(restaurant).Contains(tafel)) throw new RestaurantManagerException("UpdateTafel: Tafel bestaat niet");
+            if (!_restaurantRepository.GeefAlleTafelsVanRestaurant(restaurant.Id).Contains(tafel)) throw new RestaurantManagerException("UpdateTafel: Tafel bestaat niet");
             _tafelRepository.UpdateTafel(tafel, restaurant);
             restaurant.UpdateTafel(tafel);
         }
         catch (Exception ex)
         {
             throw new RestaurantManagerException("UpdateTafel: " + ex.Message);
+        }
+    }
+
+    public IReadOnlyList<Restaurant> GeefRestaurants(int? postcode, string? keuken)
+    {
+        try
+        {
+            if (postcode.HasValue && !string.IsNullOrWhiteSpace(keuken))
+            {
+                if (!Enum.TryParse<Keuken>(keuken, out Keuken k)) throw new RestaurantManagerException("GeefRestaurants - keuken bestaat niet");
+                if (postcode.ToString().Length != 4 || (postcode < 1000 || postcode > 9999)) throw new RestaurantManagerException("GeefRestaurants - postcode niet correct formaat");
+                return _restaurantRepository.GeefRestaurants(postcode.Value, k);
+            }
+            else if (postcode.HasValue)
+            {
+                if (postcode.ToString().Length != 4 || (postcode < 1000 || postcode > 9999)) throw new RestaurantManagerException("GeefRestaurants - postcode niet correct formaat");
+                return _restaurantRepository.GeefRestaurants(postcode.Value);
+            }
+            else if (!string.IsNullOrWhiteSpace(keuken))
+            {
+                if (!Enum.TryParse<Keuken>(keuken, out Keuken k)) throw new RestaurantManagerException("GeefRestaurants - keuken bestaat niet");
+                return _restaurantRepository.GeefRestaurants(keuken: k);
+            }
+            else
+            {
+                return _restaurantRepository.GeefAlleRestaurants();
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new RestaurantException("GeefRestaurants", ex);
+        }
+    }
+
+    public Tafel GeefTafel(int id, Restaurant restaurant)
+    {
+        {
+            try
+            {
+                if (id < 0) throw new RestaurantManagerException("Id < 0");
+                if (!_tafelRepository.BestaatTafel(id, restaurant)) throw new RestaurantManagerException("GeefTafel - bestaat niet");
+                return _tafelRepository.GeefTafel(id, restaurant);
+            }
+            catch (Exception ex)
+            {
+                throw new RestaurantException("GeefTafel", ex);
+            }
         }
     }
 

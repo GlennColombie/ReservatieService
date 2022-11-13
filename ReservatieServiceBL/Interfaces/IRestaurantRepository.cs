@@ -12,6 +12,7 @@ public interface IRestaurantRepository
     IReadOnlyList<Restaurant> GeefAlleRestaurants();
     IReadOnlyList<Restaurant> GeefAlleBestaandeRestaurants();
     Restaurant GeefRestaurant(int id);
-    IReadOnlyList<Restaurant> GeefRestaurantsVanLocatie(Locatie locatie);
-    IReadOnlyList<Tafel> GeefAlleTafelsVanRestaurant(Restaurant restaurant);
+    IReadOnlyList<Restaurant> GeefRestaurants(int? postcode = 0, Keuken? keuken = null);
+    //IReadOnlyList<Restaurant> GeefRestaurants(DateTime datum, int aantal);
+    IReadOnlyList<Tafel> GeefAlleTafelsVanRestaurant(int id);
 }

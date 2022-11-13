@@ -8,5 +8,8 @@ namespace ReservatieServiceDL.Exceptions
 {
     public class TafelRepositoryException : Exception
     {
+        public TafelRepositoryException(string? message) : base(message)
+        {
+        }
     }
 }
