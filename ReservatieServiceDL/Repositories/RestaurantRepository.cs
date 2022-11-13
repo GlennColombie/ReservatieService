@@ -1,8 +1,9 @@
-﻿using System.Data.SqlClient;
+﻿using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.IO;
 using ReservatieServiceBL.Interfaces;
 using ReservatieServiceBL.Model;
 using ReservatieServiceDL.Exceptions;
-using System.Data.SqlClient;
 
 namespace ReservatieServiceDL.Repositories
 {
@@ -112,52 +113,106 @@ namespace ReservatieServiceDL.Repositories
             }
         }
 
+
+
         public IReadOnlyList<Restaurant> GeefAlleRestaurants()
+        {
+            using SqlCommand cmd = _connection.CreateCommand();
+            try
+            {
+                _connection.Open();
+                List<Restaurant> restaurants = new();
+                Dictionary<int, Locatie> locaties = new();
+                int restaurantIdOld = -1;
+                Restaurant r = null;
+                Tafel t = null;
+                cmd.CommandText = "select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer, t.Tafelnummer, t.aantalplaatsen, t.isbezet " +
+                    "from Restaurant r " +
+                    "left join locatie l on r.locatieid = l.id " +
+                    "left join tafel t on r.id = t.restaurantid " +
+                    "order by r.id";
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    int restaurantId = (int)reader["RestaurantId"];
+                    if (restaurantId != restaurantIdOld)
+                    {
+                        Locatie l = null;
+                        if (reader["LocatieId"] is int locId && !locaties.TryGetValue(locId, out l))
+                        {
+                            //TODO: get location fields
+                            int postcode = (int)reader["Postcode"];
+                            string gemeente = (string)reader["Gemeente"];
+                            string straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
+                            string huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
+                            l = new(locId, postcode, gemeente, straat, huisnummer);
+                            locaties.Add(locId, l);
+                        }
+
+                        //TODO: get restaurant fields
+                        Keuken keuken = (Enum.Parse<Keuken>((string)reader["keuken"]));
+                        string naam = (string)reader["naam"];
+                        string email = (string)reader["Email"];
+                        string telefoonnummer = (string)reader["telefoonnummer"];
+                        r = new(restaurantId, naam, l, telefoonnummer, email, keuken);
+                        restaurants.Add(r);
+                        restaurantIdOld = restaurantId;
+                    }
+                    if (reader["Tafelnummer"] is int tafelnummer)
+                    {
+                        //TODO: get table fields
+                        // No need to test whether this is a new table. Tables are unique.
+                        int aantalPlaatsen = (int)reader["AantalPlaatsen"];
+                        bool isBezet = (bool)reader["IsBezet"];
+                        t = new(tafelnummer, aantalPlaatsen, isBezet, restaurantId);
+                        r.VoegTafelToe(t);
+                    }
+                }
+                reader.Close();
+                return restaurants;
+            }
+            catch (Exception ex)
+            {
+                throw new RestaurantRepositoryException("GebruikerRegistreren - repo", ex);
+            }
+            finally
+            {
+                _connection.Close();
+            }
+        }
+
+        public IReadOnlyList<Tafel> GeefAlleTafelsVanRestaurant(Restaurant restaurant)
         {
             using (SqlCommand cmd = _connection.CreateCommand())
             {
                 try
                 {
                     _connection.Open();
-                    string naam;
-                    string email;
-                    string telefoonnummer;
-                    int postcode;
-                    string gemeente;
-                    string straat;
-                    string huisnummer;
-                    Keuken keuken;
-                    Locatie l = null;
-                    Restaurant r = null;
-                    List<Restaurant> restaurants = new();
-                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer " +
-                        $"from Restaurant r " +
-                        $"left join locatie l on r.locatieid = l.id";
+                    int tafelnummer;
+                    int aantalPlaatsen;
+                    bool isBezet = true;
+                    cmd.CommandText = "SELECT * FROM Tafel WHERE RestaurantId = @restaurantId";
+                    cmd.Parameters.AddWithValue("@restaurantId", restaurant.Id);
                     SqlDataReader reader = cmd.ExecuteReader();
-                    while (reader.Read())
+                    List<Tafel> tafels = new();
+                    if (reader.HasRows)
                     {
-                        naam = (string)reader["naam"];
-                        email = (string)reader["Email"];
-                        telefoonnummer = (string)reader["telefoonnummer"];
-                        postcode = (int)reader["Postcode"];
-                        gemeente = (string)reader["Gemeente"];
-                        straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
-                        huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
-                        keuken = (Enum.Parse<Keuken>((string)reader["keuken"]));
-
-                        l = new(postcode, gemeente, straat, huisnummer);
-                        l.ZetId((int)reader["LocatieId"]);
-
-                        r = new(naam, l, telefoonnummer, email, keuken);
-                        r.ZetId((int)reader["RestaurantId"]);
-                        restaurants.Add(r);
+                        while (reader.Read())
+                        {
+                            tafelnummer = (int)reader["Tafelnummer"];
+                            aantalPlaatsen = (int)reader["AantalPlaatsen"];
+                            isBezet = (bool)reader["IsBezet"];
+                            //Tafel t = new(tafelnummer, aantalPlaatsen, isBezet);
+                            //tafels.Add(t);
+                        }
                     }
                     reader.Close();
-                    return restaurants;
+                    return tafels;
                 }
                 catch (Exception ex)
                 {
-                    throw new RestaurantRepositoryException("GeefAlleRestaurants - repo", ex);
+                    throw new RestaurantRepositoryException("GebruikerRegistreren - repo", ex);
                 }
                 finally
                 {
@@ -181,31 +236,70 @@ namespace ReservatieServiceDL.Repositories
                     string straat;
                     string huisnummer;
                     Keuken keuken;
+                    int tafelnummerOld = -1;
+                    int tafelnummer = 0;
+                    int aantalPlaatsen = 0;
+                    bool isBezet = false;
+                    bool first = true;
                     Locatie l = null;
                     Restaurant r = null;
-                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer " +
+                    List<Tafel> tafels = new();
+                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer, t.Tafelnummer, t.aantalplaatsen, t.isbezet " +
                         $"from Restaurant r " +
                         $"left join locatie l on r.locatieid = l.id " +
+                        $"left join tafel t on r.id = t.restaurantid " +
                         $"where r.id = {id}";
                     SqlDataReader reader = cmd.ExecuteReader();
                     while (reader.Read())
                     {
-                        naam = (string)reader["naam"];
-                        email = (string)reader["Email"];
-                        telefoonnummer = (string)reader["telefoonnummer"];
-                        postcode = (int)reader["Postcode"];
-                        gemeente = (string)reader["Gemeente"];
-                        straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
-                        huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
-                        keuken = (Enum.Parse<Keuken>((string)reader["keuken"]));
+                        if (r == null)
+                        {
+                            postcode = (int)reader["Postcode"];
+                            gemeente = (string)reader["Gemeente"];
+                            straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
+                            huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
+                            keuken = (Enum.Parse<Keuken>((string)reader["keuken"]));
+                            naam = (string)reader["naam"];
+                            email = (string)reader["Email"];
+                            telefoonnummer = (string)reader["telefoonnummer"];
 
-                        l = new(postcode, gemeente, straat, huisnummer);
-                        l.ZetId((int)reader["LocatieId"]);
+                            l = new(postcode, gemeente, straat, huisnummer);
+                            l.ZetId((int)reader["LocatieId"]);
 
-                        r = new(naam, l, telefoonnummer, email, keuken);
-                        r.ZetId((int)reader["RestaurantId"]);
+                            r = new(naam, l, telefoonnummer, email, keuken);
+                            r.ZetId((int)reader["RestaurantId"]);
+                        }
+
+                        if (!reader.IsDBNull(reader.GetOrdinal("Tafelnummer"))) // heeft tafels
+                        {
+                            tafelnummer = (int)reader["Tafelnummer"];
+                            if (tafelnummer != tafelnummerOld)
+                            {
+                                // Nieuwe tafel of de eerste
+                                if (tafelnummerOld > 0)
+                                {
+                                    // Maak tafel, einde bereikt
+                                    //Tafel t = new(tafelnummerOld, aantalPlaatsen, isBezet);
+                                    //r.VoegTafelToe(t);
+                                }
+                                first = true;
+                                tafelnummerOld = tafelnummer;
+                            }
+                            if (first)
+                            {
+                                aantalPlaatsen = (int)reader["AantalPlaatsen"];
+                                isBezet = (bool)reader["IsBezet"];
+                                first = false;
+                            }
+                        }
+
                     }
                     reader.Close();
+                    if (tafelnummer > 0)
+                    {
+                        //Tafel t = new(tafelnummer, aantalPlaatsen, isBezet);
+                        //r.VoegTafelToe(t);
+                    }
                     return r;
                 }
                 catch (Exception ex)

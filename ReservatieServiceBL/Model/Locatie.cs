@@ -32,8 +32,8 @@ namespace ReservatieServiceBL.Model
         public int Id { get; private set; }
         public int Postcode { get; private set; }
         public string Gemeente { get; private set; }
-        public string? Straat { get; private set; }
-        public string? Huisnummer { get; private set; }
+        public string Straat { get; private set; }
+        public string Huisnummer { get; private set; }
 
         public void ZetId(int id)
         {

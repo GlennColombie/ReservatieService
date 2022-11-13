@@ -28,6 +28,19 @@ namespace ReservatieServiceBeheerderRESTService.Controllers
             }
         }
 
+        [HttpGet("{id}")]
+        public ActionResult<Restaurant> Get(int id)
+        {
+            try
+            {
+                return Ok(_rM.GeefRestaurant(id));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
         [HttpPost]
         public ActionResult<Restaurant> Post([FromBody] Restaurant restaurant)
         {

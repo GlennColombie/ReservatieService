@@ -7,7 +7,7 @@ using ReservatieServiceDL.Repositories;
 
 string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=ReservatieService;Integrated Security=True";
 GebruikerManager gm = new(new GebruikerRepository(connectionString), new LocatieRepository(connectionString));
-RestaurantManager rm = new(new RestaurantRepository(connectionString), new LocatieRepository(connectionString));
+//RestaurantManager rm = new(new RestaurantRepository(connectionString), new LocatieRepository(connectionString));
 Locatie l = new(9160, "Lokeren");
 l.ZetId(4);
 Locatie l2 = new(9200, "Aalst");
@@ -16,6 +16,8 @@ Locatie l2 = new(9200, "Aalst");
 //Gebruiker g = gm.GeefGebruiker(6);
 //g.ZetNaam("test25");
 //gm.GebruikerUpdaten(g);
-Restaurant r = new("Cardis", l, "testcardis", "testcardis", Keuken.Belgisch);
+//Restaurant r = new("Cardis", l, "testcardis", "testcardis", Keuken.Belgisch);
+//List<Restaurant> restaurants = (List<Restaurant>)rm.GeefAlleRestaurants();
+RestaurantManager rm = new(new RestaurantRepository(connectionString), new LocatieRepository(connectionString), new TafelRepository(connectionString));
 List<Restaurant> restaurants = (List<Restaurant>)rm.GeefAlleRestaurants();
 Console.WriteLine("end");

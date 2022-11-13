@@ -11,7 +11,7 @@ namespace ReservatieServiceBL.Model
     public class Restaurant
     {
         [JsonConstructor]
-        public Restaurant (int id, string naam, Locatie locatie, string telefoonnummer, string email, Keuken keuken)
+        public Restaurant(int id, string naam, Locatie locatie, string telefoonnummer, string email, Keuken keuken)
         {
             ZetId(id);
             ZetNaam(naam);
@@ -28,16 +28,21 @@ namespace ReservatieServiceBL.Model
             ZetEmail(email);
             ZetKeuken(keuken);
         }
-        
+
         public int Id { get; set; }
         public string Naam { get; private set; }
         public Locatie Locatie { get; private set; }
         public string Telefoonnummer { get; private set; }
         public string Email { get; private set; }
         public Keuken Keuken { get; private set; }
+        public List<Tafel> Tafels { get => _tafels; private set => _tafels = value; }
+        public List<Reservatie> Reservaties { get => _reservaties; private set => _reservaties = value; }
 
         private List<Reservatie> _reservaties = new();
 
+        private List<Tafel> _tafels = new();
+
+        #region Setters
         public void ZetId(int id)
         {
             if (id < 0) throw new RestaurantException("Id < 0");
@@ -48,29 +53,72 @@ namespace ReservatieServiceBL.Model
             if (string.IsNullOrWhiteSpace(naam)) throw new RestaurantException("Naam mag niet leeg zijn");
             Naam = naam;
         }
-        
+
         public void ZetLocatie(Locatie locatie)
         {
             if (locatie == null) throw new RestaurantException("Locatie mag niet leeg zijn");
             Locatie = locatie;
         }
-        
+
         public void ZetTelefoonnummer(string telefoon)
         {
             if (string.IsNullOrWhiteSpace(telefoon)) throw new RestaurantException("Telefoonnummer mag niet leeg zijn");
             Telefoonnummer = telefoon;
         }
-        
+
         public void ZetEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email)) throw new RestaurantException("Email mag niet leeg zijn");
             Email = email;
         }
-        
+
         public void ZetKeuken(Keuken keuken)
         {
             Keuken = keuken;
         }
+
+        #endregion
+
+
+
+
+
+        #region Tafels
+
+
+        public void VoegTafelToe(Tafel tafel)
+        {
+            if (tafel == null) throw new RestaurantException("Tafel mag niet leeg zijn");
+            if (_tafels.Contains(tafel)) throw new RestaurantException("Tafel bestaat al");
+            _tafels.Add(tafel);
+            //if ((tafel.Restaurant == null) || (tafel.Restaurant != this)) tafel.ZetRestaurant(this);
+        }
+
+        public void VerwijderTafel(Tafel tafel)
+        {
+            if (tafel == null) throw new RestaurantException("Tafel mag niet leeg zijn");
+            if (!_tafels.Contains(tafel)) throw new RestaurantException("Tafel bestaat niet");
+            _tafels.Remove(tafel);
+            //tafel.VerwijderRestaurant();
+        }
+
+        public void UpdateTafel(Tafel tafel)
+        {
+            if (tafel == null) throw new RestaurantException("Tafel mag niet leeg zijn");
+            if (_tafels.Any(t => t.Tafelnummer == tafel.Tafelnummer))
+            {
+                _tafels.Remove(_tafels.First(t => t.Tafelnummer == tafel.Tafelnummer));
+                _tafels.Add(tafel);
+            }
+        }
+        public IReadOnlyList<Tafel> GeefTafels()
+        {
+            return _tafels.AsReadOnly();
+        }
+
+        #endregion
+
+        #region Reservaties
 
         public IReadOnlyList<Reservatie> GeefReservaties()
         {
@@ -92,7 +140,7 @@ namespace ReservatieServiceBL.Model
             _reservaties.Add(reservatie);
             if (reservatie.Restaurant != this || reservatie.Restaurant == null) reservatie.ZetRestaurant(this);
         }
-        
+
         public bool IsHetzelfde(Restaurant restaurant)
         {
             if (restaurant == null) throw new RestaurantException("IsHetzelfde - null");
@@ -103,5 +151,17 @@ namespace ReservatieServiceBL.Model
             if (!restaurant.Keuken.ToString().Equals(Keuken.ToString())) return false;
             return true;
         }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Restaurant restaurant &&
+                   Id == restaurant.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id);
+        }
+        #endregion
     }
 }

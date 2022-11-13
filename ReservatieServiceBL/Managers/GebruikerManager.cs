@@ -20,10 +20,10 @@ public class GebruikerManager
         if (gebruiker == null) throw new GebruikerManagerException("Gebruiker is null");
         try
         {
-            if (_gebruikerRepository.BestaatGebruiker(gebruiker)) throw new GebruikerManagerException("Gebruiker bestaat al");
-            if (!_locatieRepository.BestaatLocatie(gebruiker.Locatie)) _locatieRepository.VoegLocatieToe(gebruiker.Locatie);
-            gebruiker.ZetLocatie(_locatieRepository.GeefLocatie(gebruiker.Locatie));
-            _gebruikerRepository.GebruikerRegistreren(gebruiker);
+            //if (_gebruikerRepository.BestaatGebruiker(gebruiker)) throw new GebruikerManagerException("Gebruiker bestaat al");
+            //if (!_locatieRepository.BestaatLocatie(gebruiker.Locatie)) _locatieRepository.VoegLocatieToe(gebruiker.Locatie);
+            //gebruiker.ZetLocatie(_locatieRepository.GeefLocatie(gebruiker.Locatie));
+            //_gebruikerRepository.GebruikerRegistreren(gebruiker);
         }
         catch (Exception ex)
         {

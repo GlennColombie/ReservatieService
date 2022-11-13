@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp1", "ConsoleApp1\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReservatieServiceGebruikerRESTService", "ReservatieServiceRESTService\ReservatieServiceGebruikerRESTService.csproj", "{1CB330C2-D890-4F5D-B4CE-CA881EEEA91F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReservatieServiceBeheerderRESTService", "ReservatieServiceBeheerderRESTService\ReservatieServiceBeheerderRESTService.csproj", "{A16284BD-043B-48B4-B9EA-0BC8800CF979}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReservatieServiceBeheerderRESTService", "ReservatieServiceBeheerderRESTService\ReservatieServiceBeheerderRESTService.csproj", "{A16284BD-043B-48B4-B9EA-0BC8800CF979}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{17197CAB-3AB9-48E0-B6AC-CE864A13879F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
