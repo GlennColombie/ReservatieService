@@ -4,7 +4,7 @@ using ReservatieServiceDL.Repositories;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=ReservatieService;Integrated Security=True";
+var connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=ReservatieService;Integrated Security=True;TrustServerCertificate=True";
 
 // Add services to the container.
 

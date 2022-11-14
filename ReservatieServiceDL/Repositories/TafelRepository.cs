@@ -32,16 +32,59 @@ namespace ReservatieServiceDL.Repositories
             {
                 throw new TafelRepositoryException("VoegTafelToe: " + ex.Message);
             }
+            finally
+            {
+                _connection.Close();
+            }
         }
 
         public void VerwijderTafel(Tafel tafel, Restaurant restaurant)
         {
-            throw new NotImplementedException();
+            if (tafel == null) throw new TafelRepositoryException("VoegTafelToe: Tafel mag niet null zijn");
+            if (restaurant == null) throw new TafelRepositoryException("VoegTafelToe: Restaurant mag niet null zijn");
+            using SqlCommand cmd = _connection.CreateCommand();
+            try
+            {
+                _connection.Open();
+                cmd.CommandText = $"update tafel set is_visible = 0 where tafelnummer = {tafel.Tafelnummer} and restaurantid = {restaurant.Id}";
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                throw new TafelRepositoryException("VoegTafelToe: " + ex.Message);
+            }
+            finally
+            {
+                _connection.Close();
+            }
         }
 
         public Tafel GeefTafel(int tafelnummer, Restaurant restaurant)
         {
-            throw new NotImplementedException();
+            if (tafelnummer <= 0) throw new TafelRepositoryException("GeefTafel: tafelnummer<= 0");
+            if (restaurant == null) throw new TafelRepositoryException("GeefTafel: Restaurant mag niet null zijn");
+            using SqlCommand cmd = _connection.CreateCommand();
+            try
+            {
+                _connection.Open();
+                Tafel t = null;
+                cmd.CommandText = $"select * from tafel where tafelnummer = {tafelnummer} and restaurantid = {restaurant.Id}";
+                SqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    t = new((int)reader["tafelnummer"], (int)reader["aantalplaatsen"], (bool)reader["isbezet"], restaurant.Id);
+                }
+                reader.Close();
+                return t;
+            }
+            catch (Exception ex)
+            {
+                throw new TafelRepositoryException("VoegTafelToe: " + ex.Message);
+            }
+            finally
+            {
+                _connection.Close();
+            }
         }
 
         public void UpdateTafel(Tafel tafel, Restaurant restaurant)

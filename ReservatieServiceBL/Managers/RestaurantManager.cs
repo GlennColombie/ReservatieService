@@ -211,19 +211,17 @@ public class RestaurantManager
         }
     }
 
-    public Tafel GeefTafel(int id, Restaurant restaurant)
+    public Tafel GeefTafel(int tafelnummer, Restaurant restaurant)
     {
+        try
         {
-            try
-            {
-                if (id < 0) throw new RestaurantManagerException("Id < 0");
-                if (!_tafelRepository.BestaatTafel(id, restaurant)) throw new RestaurantManagerException("GeefTafel - bestaat niet");
-                return _tafelRepository.GeefTafel(id, restaurant);
-            }
-            catch (Exception ex)
-            {
-                throw new RestaurantException("GeefTafel", ex);
-            }
+            if (tafelnummer < 0) throw new RestaurantManagerException("Id < 0");
+            if (!_tafelRepository.BestaatTafel(tafelnummer, restaurant)) throw new RestaurantManagerException("GeefTafel - bestaat niet");
+            return _tafelRepository.GeefTafel(tafelnummer, restaurant);
+        }
+        catch (Exception ex)
+        {
+            throw new RestaurantException("GeefTafel", ex);
         }
     }
 

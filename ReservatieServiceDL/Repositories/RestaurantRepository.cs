@@ -194,7 +194,7 @@ namespace ReservatieServiceDL.Repositories
                 int tafelnummer;
                 int aantalPlaatsen;
                 bool isBezet = true;
-                cmd.CommandText = $"SELECT * FROM Tafel WHERE RestaurantId = {id}";
+                cmd.CommandText = $"SELECT * FROM Tafel WHERE RestaurantId = {id} and is_visible = 1";
                 SqlDataReader reader = cmd.ExecuteReader();
                 List<Tafel> tafels = new();
                 while (reader.Read())

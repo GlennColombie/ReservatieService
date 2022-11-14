@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using ReservatieServiceBL.Managers;
 using ReservatieServiceBL.Model;
 
@@ -28,12 +29,13 @@ namespace ReservatieServiceBeheerderRESTService.Controllers
             }
         }
 
-        [HttpGet("{id}")]
-        public ActionResult<Restaurant> Get(int id)
+        [HttpGet("{restaurantId}")]
+        public ActionResult<Restaurant> Get(int restaurantId)
         {
+            if (restaurantId <= 0) return BadRequest("RestaurantController - Get(restaurant) - Restaurant id is niet geldig");
             try
             {
-                return Ok(_rM.GeefRestaurant(id));
+                return Ok(_rM.GeefRestaurant(restaurantId));
             }
             catch (Exception e)
             {
@@ -44,7 +46,7 @@ namespace ReservatieServiceBeheerderRESTService.Controllers
         [HttpPost]
         public ActionResult<Restaurant> Post([FromBody] Restaurant restaurant)
         {
-            if (restaurant == null) return BadRequest("Restaurant is null");
+            if (restaurant == null) return BadRequest("RestaurantController - Post(restaurant) - Restaurant is null");
             try
             {
                 _rM.VoegRestaurantToe(restaurant);
@@ -56,11 +58,11 @@ namespace ReservatieServiceBeheerderRESTService.Controllers
             }
         }
 
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] Restaurant restaurant)
+        [HttpPut("{restaurantId}")]
+        public IActionResult Put(int restaurantId, [FromBody] Restaurant restaurant)
         {
-            if (restaurant == null) return BadRequest("Restaurant is null");
-            if (restaurant.Id != id) return BadRequest("Restaurant id is niet hetzelfde");
+            if (restaurant == null) return BadRequest("RestaurantController - Put - Restaurant is null");
+            if (restaurant.Id != restaurantId) return BadRequest("RestaurantController - Put - Restaurant id is niet hetzelfde");
             try
             {
                 _rM.UpdateRestaurant(restaurant);
@@ -72,12 +74,13 @@ namespace ReservatieServiceBeheerderRESTService.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        [HttpDelete("{restaurantId}")]
+        public IActionResult Delete(int restaurantId)
         {
+            if (restaurantId <= 0) return BadRequest("RestaurantController - Delete(restaurant) - RestaurantId is niet geldig");
             try
             {
-                _rM.VerwijderRestaurant(_rM.GeefRestaurant(id));
+                _rM.VerwijderRestaurant(_rM.GeefRestaurant(restaurantId));
                 return NoContent();
             }
             catch (Exception e)
@@ -87,14 +90,14 @@ namespace ReservatieServiceBeheerderRESTService.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/Tafels")]
-        public ActionResult<Tafel> Post(int id, [FromBody] Tafel tafel)
+        [Route("{restaurantId}/Tafels")]
+        public ActionResult<Tafel> Post(int restaurantId, [FromBody] Tafel tafel)
         {
-            if (id <= 0) return BadRequest("Id is niet geldig");
-            if (tafel == null) return BadRequest("Tafel is null");
+            if (restaurantId <= 0) return BadRequest("RestaurantController - Post(tafel) - Id is niet geldig");
+            if (tafel == null) return BadRequest("RestaurantController - Post(tafel) - Tafel is null");
             try
             {
-                Restaurant restaurant = _rM.GeefRestaurant(id);
+                Restaurant restaurant = _rM.GeefRestaurant(restaurantId);
                 _rM.VoegTafelToe(tafel, restaurant);
                 return Ok(tafel);
             }
@@ -105,13 +108,13 @@ namespace ReservatieServiceBeheerderRESTService.Controllers
         }
         
         [HttpGet]
-        [Route("{id}/Tafels")]
-        public ActionResult<List<Tafel>> GetTafels(int id)
+        [Route("{restaurantId}/Tafels")]
+        public ActionResult<List<Tafel>> GetTafels(int restaurantId)
         {
-            if (id <= 0) return BadRequest("Id is niet geldig");
+            if (restaurantId <= 0) return BadRequest("RestaurantController - Get(tafels) - restaurantId is niet geldig");
             try
             {
-                return Ok(_rM.GeefAlleTafelsVanRestaurant(id));
+                return Ok(_rM.GeefAlleTafelsVanRestaurant(restaurantId));
             }
             catch (Exception e)
             {
@@ -120,14 +123,16 @@ namespace ReservatieServiceBeheerderRESTService.Controllers
         }
 
         [HttpDelete]
-        [Route("{id}/Tafels/{tafelId}")]
-        public IActionResult DeleteTafel(int id, int tafelId)
+        [Route("{restaurantId}/Tafels/{tafelnummer}")]
+        public IActionResult DeleteTafel(int restaurantId, int tafelnummer)
         {
-            if (id <= 0) return BadRequest("Id is niet geldig");
-            if (tafelId <= 0) return BadRequest("TafelId is niet geldig");
+            if (restaurantId <= 0) return BadRequest("RestaurantController - Delete(tafel) - Id is niet geldig");
+            if (tafelnummer <= 0) return BadRequest("RestaurantController - Delete(tafel) - TafelId is niet geldig");
             try
             {
-                _rM.VerwijderTafel(_rM.GeefTafel(tafelId));
+                Restaurant r = _rM.GeefRestaurant(restaurantId);
+                Tafel t = _rM.GeefTafel(tafelnummer, r);
+                _rM.VerwijderTafel(t, r);
                 return NoContent();
             }
             catch (Exception e)
