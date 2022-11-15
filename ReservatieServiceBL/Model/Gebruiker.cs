@@ -1,18 +1,20 @@
 ﻿using ReservatieServiceBL.Exceptions;
+using System.Net.Mail;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace ReservatieServiceBL.Model
 {
     public class Gebruiker
     {
         public int Id { get; private set; }
-        
+
         public string Naam { get; private set; }
-        
+
         public string Email { get; private set; }
-        
+
         public string Telefoonnummer { get; private set; }
-        
+
         public Locatie Locatie { get; private set; }
 
         private List<Reservatie> _reservaties = new();
@@ -23,21 +25,21 @@ namespace ReservatieServiceBL.Model
             ZetId(id);
             ZetNaam(naam);
             ZetEmail(email);
-            ZetTelefoonnr(telefoonnummer);
+            ZetTelefoonnummer(telefoonnummer);
             ZetLocatie(locatie);
         }
         public Gebruiker(string naam, string email, string telefoonnummer, Locatie locatie)
         {
             ZetNaam(naam);
             ZetEmail(email);
-            ZetTelefoonnr(telefoonnummer);
+            ZetTelefoonnummer(telefoonnummer);
             ZetLocatie(locatie);
         }
 
 
         public void ZetId(int nr)
         {
-            if (nr < 0) throw new GebruikerException("ZetKlantnr - <0");
+            if (nr < 0) throw new GebruikerException("ZetId - <= 0");
             Id = nr;
         }
         public void ZetNaam(string naam)
@@ -47,19 +49,22 @@ namespace ReservatieServiceBL.Model
         }
         public void ZetEmail(string email)
         {
-            if (string.IsNullOrWhiteSpace(email)) throw new GebruikerException("ZetNaam - null/whitespace");
+            if (string.IsNullOrWhiteSpace(email)) throw new GebruikerException("ZetEmail - null/whitespace");
+            if (!IsEmail(email)) throw new GebruikerException("ZetEmail - geen geldig emailadres");
             Email = email;
         }
-        public void ZetTelefoonnr(string nr)
+        public void ZetTelefoonnummer(string telefoonnummer)
         {
-            if (string.IsNullOrWhiteSpace(nr)) throw new GebruikerException("ZetNaam - null/whitespace");
-            Telefoonnummer = nr;
+            var regex = @"^(((\+|00)32[ ]?(?:\(0\)[ ]?)?)|0){1}(4(60|[789]\d)\/?(\s?\d{2}\.?){2}(\s?\d{2})|(\d\/?\s?\d{3}|\d{2}\/?\s?\d{2})(\.?\s?\d{2}){2})$";
+            if (string.IsNullOrWhiteSpace(telefoonnummer)) throw new GebruikerException("ZetTelefoonnummer - null/whitespace");
+            if (!Regex.IsMatch(telefoonnummer, regex)) throw new GebruikerException("ZetTelefoonnr - geen geldig telefoonnummer");
+            Telefoonnummer = telefoonnummer;
         }
         public void ZetLocatie(Locatie locatie)
         {
             Locatie = locatie ?? throw new GebruikerException("ZetLocatie - null");
         }
-        
+
         public void VoegReservatieToe(Reservatie reservatie)
         {
             if (reservatie == null) throw new GebruikerException("VoegReservatieToe - null");
@@ -67,7 +72,7 @@ namespace ReservatieServiceBL.Model
             _reservaties.Add(reservatie);
             if ((reservatie.Gebruiker != this) || (reservatie.Gebruiker == null)) reservatie.ZetGebruiker(this);
         }
-        
+
         public void VerwijderReservatie(Reservatie reservatie)
         {
             if (reservatie == null) throw new GebruikerException("VerwijderReservatie - null");
@@ -88,6 +93,30 @@ namespace ReservatieServiceBL.Model
         public IReadOnlyList<Reservatie> GeefReservaties()
         {
             return _reservaties.AsReadOnly();
+        }
+
+        private bool IsEmail(string email)
+        {
+            try
+            {
+                MailAddress mail = new(email);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Gebruiker gebruiker &&
+                   Id == gebruiker.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id);
         }
     }
 }

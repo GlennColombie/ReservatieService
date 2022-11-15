@@ -19,7 +19,6 @@ namespace ReservatieServiceBL.Model
         public int Tafelnummer { get; private set; }
         public int AantalPlaatsen { get; private set; }
         public bool IsBezet { get; private set; }
-
         public int RestaurantId { get; private set; }
 
         public void ZetTafelnummer(int tafelnummer)
@@ -33,7 +32,7 @@ namespace ReservatieServiceBL.Model
             if (aantal < 0) throw new TafelException("ZetAantalPlaatsen: AantalPlaatsen moet groter zijn dan 0");
             AantalPlaatsen = aantal;
         }
-        
+
         public void ZetIsBezet(bool isBezet)
         {
             IsBezet = isBezet;
@@ -43,7 +42,7 @@ namespace ReservatieServiceBL.Model
         {
             IsBezet = true;
         }
-
+        
         public void ZetVrij()
         {
             IsBezet = false;
@@ -51,7 +50,7 @@ namespace ReservatieServiceBL.Model
 
         public void ZetRestaurantId(int restaurantId)
         {
-            if (restaurantId < 0) throw new TafelException("ZetRestaurantId: RestaurantId moet groter zijn dan 0");
+            if (restaurantId <= 0) throw new TafelException("ZetRestaurantId: RestaurantId moet groter zijn dan 0");
             RestaurantId = restaurantId;
         }
 
@@ -60,10 +59,12 @@ namespace ReservatieServiceBL.Model
         //    if (Restaurant != null && Restaurant.GeefTafels().Contains(this)) Restaurant.VerwijderTafel(this);
         //    Restaurant = null;
         //}
+
         public override bool Equals(object? obj)
         {
             return obj is Tafel tafel &&
-                   Tafelnummer == tafel.Tafelnummer;
+                   Tafelnummer == tafel.Tafelnummer
+                   && RestaurantId == tafel.RestaurantId;
         }
 
         public override int GetHashCode()

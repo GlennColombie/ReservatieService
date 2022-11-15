@@ -11,5 +11,9 @@ namespace ReservatieServiceBL.Exceptions
         public GebruikerException(string? message) : base(message)
         {
         }
+
+        public GebruikerException(string? message, Exception? innerException) : base(message, innerException)
+        {
+        }
     }
 }

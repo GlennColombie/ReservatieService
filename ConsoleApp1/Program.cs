@@ -4,6 +4,7 @@ using ReservatieServiceBL.Managers;
 using ReservatieServiceBL.Model;
 using ReservatieServiceDL;
 using ReservatieServiceDL.Repositories;
+using System.Text.RegularExpressions;
 
 string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=ReservatieService;Integrated Security=True";
 GebruikerManager gm = new(new GebruikerRepository(connectionString), new LocatieRepository(connectionString));
@@ -18,6 +19,10 @@ Locatie l2 = new(9200, "Aalst");
 //gm.GebruikerUpdaten(g);
 //Restaurant r = new("Cardis", l, "testcardis", "testcardis", Keuken.Belgisch);
 //List<Restaurant> restaurants = (List<Restaurant>)rm.GeefAlleRestaurants();
-RestaurantManager rm = new(new RestaurantRepository(connectionString), new LocatieRepository(connectionString), new TafelRepository(connectionString));
-List<Restaurant> restaurants = (List<Restaurant>)rm.GeefAlleRestaurants();
+//RestaurantManager rm = new(new RestaurantRepository(connectionString), new LocatieRepository(connectionString), new TafelRepository(connectionString));
+//List<Restaurant> restaurants = (List<Restaurant>)rm.GeefAlleRestaurants();
+
+var regex = @"^(((\+|00)32[ ]?(?:\(0\)[ ]?)?)|0){1}(4(60|[789]\d)\/?(\s?\d{2}\.?){2}(\s?\d{2})|(\d\/?\s?\d{3}|\d{2}\/?\s?\d{2})(\.?\s?\d{2}){2})$";
+Console.WriteLine(Regex.IsMatch("0494386634", regex));
+DateOnly d = new(18, 11, 2022);
 Console.WriteLine("end");

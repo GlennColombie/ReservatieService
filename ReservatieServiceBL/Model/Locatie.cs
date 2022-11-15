@@ -32,8 +32,8 @@ namespace ReservatieServiceBL.Model
         public int Id { get; private set; }
         public int Postcode { get; private set; }
         public string Gemeente { get; private set; }
-        public string Straat { get; private set; }
-        public string Huisnummer { get; private set; }
+        public string? Straat { get; private set; }
+        public string? Huisnummer { get; private set; }
 
         public void ZetId(int id)
         {
@@ -43,13 +43,13 @@ namespace ReservatieServiceBL.Model
         
         public void ZetPostcode(int postcode)
         {
-            if (postcode.ToString().Length < 4 || postcode.ToString().Length > 4) throw new LocatieException("Postcode moet 4 cijfers bevatten");
+            if (postcode < 1000 || postcode > 9999) throw new LocatieException("ZetPostcode - niet geldig");
             Postcode = postcode;
         }
         
         public void ZetGemeente(string gemeente)
         {
-            if (string.IsNullOrWhiteSpace(gemeente)) throw new LocatieException("Gemeente mag niet leeg zijn");
+            if (string.IsNullOrWhiteSpace(gemeente)) throw new LocatieException("ZetGemeente - null");
             Gemeente = gemeente;
         }
         
@@ -65,9 +65,8 @@ namespace ReservatieServiceBL.Model
 
         public bool IsDezelfde(Locatie locatie)
         {
-            if (locatie == null) throw new LocatieException("Locatie is null");
+            if (locatie == null) throw new LocatieException("IsDezelfde - Locatie is null");
             if (locatie.Id != Id) return false;
-            if (locatie.Postcode != Postcode) return false;
             if (!locatie.Postcode.Equals(Postcode)) return false;
             if (!locatie.Gemeente.Equals(Gemeente)) return false;
             return true;

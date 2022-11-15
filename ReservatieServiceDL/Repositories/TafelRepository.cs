@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using ReservatieServiceBL.Interfaces;
 using ReservatieServiceBL.Model;
 using ReservatieServiceDL.Exceptions;

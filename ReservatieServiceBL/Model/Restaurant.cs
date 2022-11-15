@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ReservatieServiceBL.Exceptions;
 
@@ -45,30 +47,33 @@ namespace ReservatieServiceBL.Model
         #region Setters
         public void ZetId(int id)
         {
-            if (id < 0) throw new RestaurantException("Id < 0");
+            if (id < 0) throw new RestaurantException("ZetId - Id < 0");
             Id = id;
         }
         public void ZetNaam(string naam)
         {
-            if (string.IsNullOrWhiteSpace(naam)) throw new RestaurantException("Naam mag niet leeg zijn");
+            if (string.IsNullOrWhiteSpace(naam)) throw new RestaurantException("ZetNaam - null");
             Naam = naam;
         }
 
         public void ZetLocatie(Locatie locatie)
         {
-            if (locatie == null) throw new RestaurantException("Locatie mag niet leeg zijn");
+            if (locatie == null) throw new RestaurantException("ZetLocatie - null");
             Locatie = locatie;
         }
 
         public void ZetTelefoonnummer(string telefoon)
         {
-            if (string.IsNullOrWhiteSpace(telefoon)) throw new RestaurantException("Telefoonnummer mag niet leeg zijn");
+            var regex = @"^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$";
+            if (string.IsNullOrWhiteSpace(telefoon)) throw new RestaurantException("ZetTelefoonnummer - null");
+            if (!Regex.IsMatch(telefoon, regex)) throw new RestaurantException("ZetTelefoonnummer - geen geldig telefoonnummer");
             Telefoonnummer = telefoon;
         }
 
         public void ZetEmail(string email)
         {
-            if (string.IsNullOrWhiteSpace(email)) throw new RestaurantException("Email mag niet leeg zijn");
+            if (string.IsNullOrWhiteSpace(email)) throw new RestaurantException("ZetEmail - null");
+            if (!IsEmail(email)) throw new RestaurantException("ZetEmail - Email is niet geldig");
             Email = email;
         }
 
@@ -78,10 +83,6 @@ namespace ReservatieServiceBL.Model
         }
 
         #endregion
-
-
-
-
 
         #region Tafels
 
@@ -120,11 +121,6 @@ namespace ReservatieServiceBL.Model
 
         #region Reservaties
 
-        public IReadOnlyList<Reservatie> GeefReservaties()
-        {
-            return _reservaties.AsReadOnly();
-        }
-
         public void VerwijderReservatie(Reservatie reservatie)
         {
             if (reservatie == null) throw new RestaurantException("Reservatie mag niet leeg zijn");
@@ -141,6 +137,22 @@ namespace ReservatieServiceBL.Model
             if (reservatie.Restaurant != this || reservatie.Restaurant == null) reservatie.ZetRestaurant(this);
         }
 
+        public void UpdateReservatie(Reservatie reservatie)
+        {
+            if (reservatie == null) throw new RestaurantException("Reservatie mag niet leeg zijn");
+            if (_reservaties.Any(r => r.Reservatienummer == reservatie.Reservatienummer))
+            {
+                _reservaties.Remove(_reservaties.First(r => r.Reservatienummer == reservatie.Reservatienummer));
+                _reservaties.Add(reservatie);
+            }
+        }
+        public IReadOnlyList<Reservatie> GeefReservaties()
+        {
+            return _reservaties.AsReadOnly();
+        }
+
+        #endregion
+        
         public bool IsHetzelfde(Restaurant restaurant)
         {
             if (restaurant == null) throw new RestaurantException("IsHetzelfde - null");
@@ -162,6 +174,18 @@ namespace ReservatieServiceBL.Model
         {
             return HashCode.Combine(Id);
         }
-        #endregion
+
+        private bool IsEmail(string email)
+        {
+            try
+            {
+                MailAddress mail = new(email);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
     }
 }

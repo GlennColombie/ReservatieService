@@ -131,6 +131,7 @@ namespace ReservatieServiceDL.Repositories
                     "from Restaurant r " +
                     "left join locatie l on r.locatieid = l.id " +
                     "left join tafel t on r.id = t.restaurantid " +
+                    "where t.is_visible = 1 " +
                     "order by r.id";
                 SqlDataReader reader = cmd.ExecuteReader();
 
@@ -238,7 +239,7 @@ namespace ReservatieServiceDL.Repositories
                         $"from Restaurant r " +
                         $"left join locatie l on r.locatieid = l.id " +
                         $"left join tafel t on r.id = t.restaurantid " +
-                        $"where r.id = {id}";
+                        $"where r.id = {id} and t.is_visible = 1";
                     SqlDataReader reader = cmd.ExecuteReader();
                     while (reader.Read())
                     {
