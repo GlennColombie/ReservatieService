@@ -1,11 +1,13 @@
 ﻿using ReservatieServiceBL.Exceptions;
 using ReservatieServiceBL.Interfaces;
-using ReservatieServiceBL.Model;
+using ReservatieServiceBL.Entities;
+using System.Globalization;
 
 namespace ReservatieServiceBL.Managers;
 
 public class GebruikerManager
 {
+    string[] dateFormats = { "dd/MM/yyyy", "dd-MM-yyyy", "dd.MM.yyyy", "dd/MM/yy", "dd-MM-yy", "dd.MM.yy" };
     private IGebruikerRepository _gebruikerRepository;
     private ILocatieRepository _locatieRepository;
 
@@ -15,15 +17,20 @@ public class GebruikerManager
         _locatieRepository = locatieRepository;
     }
 
-    public void GebruikerRegistreren(Gebruiker gebruiker)
+    public GebruikerManager()
+    {
+    }
+
+    public virtual void GebruikerRegistreren(Gebruiker gebruiker)
     {
         if (gebruiker == null) throw new GebruikerManagerException("Gebruiker is null");
         try
         {
-            //if (_gebruikerRepository.BestaatGebruiker(gebruiker)) throw new GebruikerManagerException("Gebruiker bestaat al");
-            //if (!_locatieRepository.BestaatLocatie(gebruiker.Locatie)) _locatieRepository.VoegLocatieToe(gebruiker.Locatie);
-            //gebruiker.ZetLocatie(_locatieRepository.GeefLocatie(gebruiker.Locatie));
-            //_gebruikerRepository.GebruikerRegistreren(gebruiker);
+            if (!_locatieRepository.BestaatLocatie(gebruiker.Locatie)) _locatieRepository.VoegLocatieToe(gebruiker.Locatie);
+            Locatie l = _locatieRepository.GeefLocatie(gebruiker.Locatie);
+            if (_gebruikerRepository.BestaatGebruiker(gebruiker)) throw new GebruikerManagerException("Gebruiker bestaat al");
+            gebruiker.ZetLocatieId();
+            _gebruikerRepository.GebruikerRegistreren(gebruiker);
         }
         catch (Exception ex)
         {
@@ -31,16 +38,19 @@ public class GebruikerManager
         }
     }
 
-    public void GebruikerUpdaten(Gebruiker gebruiker)
+    public virtual void GebruikerUpdaten(Gebruiker gebruiker)
     {
         if (gebruiker == null) throw new GebruikerManagerException("Gebruiker is null");
         try
         {
-            if (_gebruikerRepository.BestaatGebruiker(gebruiker.Id))
+            if (_gebruikerRepository.BestaatGebruiker(gebruiker.GebruikerId))
             {
-                Gebruiker g = _gebruikerRepository.GeefGebruiker(gebruiker.Id);
+                Gebruiker g = _gebruikerRepository.GeefGebruiker(gebruiker.GebruikerId);
                 if (g.IsDezelfde(gebruiker)) throw new GebruikerManagerException("Gebruiker is hetzelfde");
                 if (!_locatieRepository.BestaatLocatie(gebruiker.Locatie)) _locatieRepository.VoegLocatieToe(gebruiker.Locatie);
+                Locatie l = _locatieRepository.GeefLocatie(gebruiker.Locatie);
+                gebruiker.Locatie = l;
+                gebruiker.ZetLocatieId();
                 _gebruikerRepository.UpdateGebruiker(gebruiker);
             }
             else throw new GebruikerManagerException("Gebruiker bestaat niet");
@@ -51,7 +61,7 @@ public class GebruikerManager
         }
     }
 
-    public void GebruikerVerwijderen(Gebruiker gebruiker)
+    public virtual void GebruikerVerwijderen(Gebruiker gebruiker)
     {
         if (gebruiker == null) throw new GebruikerManagerException("Gebruiker is null");
         try
@@ -65,7 +75,20 @@ public class GebruikerManager
         }
     }
 
-    public Gebruiker GeefGebruiker(int klantnr)
+    public virtual bool BestaatGebruiker(int id)
+    {
+        if (id <= 0) throw new GebruikerManagerException("GebruikerId is kleiner of gelijk aan 0");
+        try
+        {
+            return _gebruikerRepository.BestaatGebruiker(id);
+        }
+        catch (Exception ex)
+        {
+            throw new GebruikerManagerException("Er is een fout opgetreden bij het controleren of de gebruiker bestaat", ex);
+        }
+    }
+
+    public virtual Gebruiker GeefGebruiker(int klantnr)
     {
         try
         {
@@ -79,7 +102,7 @@ public class GebruikerManager
         }
     }
 
-    public IReadOnlyList<Gebruiker> GeefGebruikers()
+    public virtual IReadOnlyList<Gebruiker> GeefGebruikers()
     {
         try
         {
@@ -91,37 +114,31 @@ public class GebruikerManager
         }
     }
 
-    public IReadOnlyList<Gebruiker> GeefBestaandeGebruikers()
+    public virtual IReadOnlyList<Reservatie> ZoekReservaties(Gebruiker gebruiker, string? begindatum, string? einddatum)
     {
         try
         {
-            return _gebruikerRepository.GeefBestaandeGebruikers();
-        }
-        catch (Exception ex)
-        {
-            throw new GebruikerManagerException("Er is een fout opgetreden bij het ophalen van de gebruikers", ex);
-        }
-    }
+            if (gebruiker == null) throw new GebruikerManagerException("GeefReservaties - gebruiker is null");
 
-    public IReadOnlyList<Reservatie> ZoekReservaties(DateTime? begindatum, DateTime? einddatum)
-    {
-        try
-        {
-            List<Reservatie> reservaties = new();
-            if (begindatum.HasValue && !einddatum.HasValue)
+            if (!string.IsNullOrWhiteSpace(begindatum) && !string.IsNullOrWhiteSpace(einddatum))
             {
-                reservaties.AddRange(_gebruikerRepository.GeefReservaties(begindatum.Value, null));
-                return reservaties;
+                DateTime begin = DateTime.Parse(begindatum);
+                DateTime eind = DateTime.Parse(einddatum);
+                return _gebruikerRepository.GeefReservaties(gebruiker, begin, eind);
             }
-            else if (!begindatum.HasValue && einddatum.HasValue)
+            else if (!string.IsNullOrWhiteSpace(einddatum))
             {
-                reservaties.AddRange(_gebruikerRepository.GeefReservaties(null, einddatum.Value));
-                return reservaties;
+                DateTime eind = DateTime.Parse(einddatum);
+                return _gebruikerRepository.GeefReservaties(gebruiker, DateTime.Parse("1/1/1900"), eind);
+            }
+            else if (!string.IsNullOrWhiteSpace(begindatum))
+            {
+                DateTime begin = DateTime.Parse(begindatum);
+                return _gebruikerRepository.GeefReservaties(gebruiker, begin, DateTime.MaxValue);
             }
             else
             {
-                reservaties.AddRange(_gebruikerRepository.GeefReservaties(begindatum.Value, einddatum.Value));
-                return reservaties;
+                return _gebruikerRepository.GeefReservaties(gebruiker, DateTime.Parse("1/1/1900"), DateTime.MaxValue);
             }
         }
         catch (Exception ex)

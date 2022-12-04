@@ -1,6 +1,7 @@
 ﻿using ReservatieServiceBL.Exceptions;
 using ReservatieServiceBL.Interfaces;
-using ReservatieServiceBL.Model;
+using ReservatieServiceBL.Entities;
+using System.Globalization;
 
 namespace ReservatieServiceBL.Managers;
 
@@ -9,35 +10,25 @@ public class ReservatieManager
     private IReservatieRepository _reservatieRepository;
     private IRestaurantRepository _restaurantRepository;
     private IGebruikerRepository _gebruikerRepository;
-    private ITafelRepository _tafelRepository;
     private ILocatieRepository _locatieRepository;
-
-    public ReservatieManager(IReservatieRepository reservatieRepository, IRestaurantRepository restaurantRepository, IGebruikerRepository gebruikerRepository, ITafelRepository tafelRepository, ILocatieRepository locatieRepository)
+    public ReservatieManager(IReservatieRepository reservatieRepository, IRestaurantRepository restaurantRepository, IGebruikerRepository gebruikerRepository, ILocatieRepository locatieRepository)
     {
         _reservatieRepository = reservatieRepository;
         _restaurantRepository = restaurantRepository;
         _gebruikerRepository = gebruikerRepository;
-        _tafelRepository = tafelRepository;
         _locatieRepository = locatieRepository;
     }
 
-    // WERKT
-    public void VoegReservatieToe(Reservatie reservatie)
+    public ReservatieManager()
+    {
+    }
+
+    public virtual void VoegReservatieToe(Reservatie reservatie)
     {
         if (reservatie == null) throw new ReservatieManagerException("VoegReservatieToe - Reservatie is null");
         try
         {
             if (_reservatieRepository.BestaatReservatie(reservatie)) throw new ReservatieManagerException("VoegReservatieToe - Reservatie bestaat al");
-            if (!_locatieRepository.BestaatLocatie(reservatie.Gebruiker.Locatie)) throw new ReservatieManagerException("VoegReservatieToe - Gebruiker locatie bestaat niet");
-
-            if (!_gebruikerRepository.BestaatGebruiker(reservatie.Gebruiker)) throw new ReservatieManagerException("VoegReservatieToe - Gebruiker bestaat niet");
-            Gebruiker g = _gebruikerRepository.GeefGebruiker(reservatie.Gebruiker.Id);
-            
-            if (!_restaurantRepository.BestaatRestaurant(reservatie.Restaurant)) throw new ReservatieManagerException("VoegReservatieToe - Restaurant bestaat niet");
-            Restaurant r = _restaurantRepository.GeefRestaurant(reservatie.Restaurant.Id);
-            
-            if (!_tafelRepository.BestaatTafel(reservatie.Tafel.Tafelnummer, r)) throw new ReservatieManagerException("VoegReservatieToe - Tafel bestaat niet");
-            
             _reservatieRepository.VoegReservatieToe(reservatie);
         }
         catch (Exception ex)
@@ -46,45 +37,45 @@ public class ReservatieManager
         }
     }
 
-    public void DeleteReservatie(Reservatie reservatie)
+    public virtual void AnnuleerReservatie(int reservatieNummer)
     {
-        if (reservatie == null) throw new ReservatieManagerException("Reservatie is niet ingevuld");
+        if (reservatieNummer <= 0) throw new ReservatieManagerException("AnnuleerReservatie - ReservatieNummer is kleiner of gelijk aan 0");
         try
         {
-            if (!_reservatieRepository.BestaatReservatie(reservatie))
-                throw new ReservatieManagerException("Reservatie bestaat niet");
-            _reservatieRepository.DeleteReservatie(reservatie);
+            Reservatie r = GeefReservatie(reservatieNummer);
+            if (r == null) throw new ReservatieManagerException("AnnuleerReservatie - Bestaat niet");
+            if (r.Uur < DateTime.Now) throw new ReservatieManagerException("AnnuleerReservatie - Reservatie is al verstreken");
+             _reservatieRepository.AnnuleerReservatie(reservatieNummer);
         }
         catch (Exception ex)
         {
-            throw new ReservatieManagerException("Reservatie kon niet verwijderd worden", ex);
+            throw new ReservatieManagerException("AnnuleerReservatie", ex);
         }
     }
 
-    public void UpdateReservatie(Reservatie reservatie)
+    public virtual void UpdateReservatie(Reservatie reservatie)
     {
         if (reservatie == null) throw new ReservatieManagerException("Reservatie is niet ingevuld");
         try
         {
-            if (!_reservatieRepository.BestaatReservatie(reservatie)) throw new ReservatieManagerException("Reservatie bestaat niet");
-            if (reservatie.Gebruiker == null) throw new ReservatieManagerException("Gebruiker is niet ingevuld");
-            if (reservatie.Restaurant == null) throw new ReservatieManagerException("Restaurant is niet ingevuld");
-            //TODO Enkel datum/uur/aantalplaatsen aanpasbaar maken  
-
+            if ( _reservatieRepository.BestaatReservatie(reservatie)) throw new ReservatieManagerException("UpdateReservatie - bestaat niet");
+            Reservatie r = _reservatieRepository.GeefReservatie(reservatie.Reservatienummer);
+            if (r.IsDezelfde(reservatie)) throw new ReservatieManagerException("Reservatie is niet gewijzigd");
+            if (reservatie.AantalPlaatsen > r.Tafel.AantalPlaatsen) throw new ReservatieManagerException("Aantal plaatsen is groter dan aantal plaatsen van tafel");
             _reservatieRepository.UpdateReservatie(reservatie);
         }
         catch (Exception ex)
         {
-            throw new ReservatieManagerException("Reservatie kon niet geupdate worden", ex);
+            throw new ReservatieManagerException("UpdateReservatie", ex);
         }
     }
 
-    public Reservatie GeefReservatie(int id)
+    public virtual Reservatie GeefReservatie(int reservatienummer)
     {
-        if (id < 0) throw new ReservatieManagerException("Id is kleiner dan 0");
+        if (reservatienummer < 0) throw new ReservatieManagerException("Id is kleiner dan 0");
         try
         {
-            return _reservatieRepository.GeefReservatie(id);
+            return _reservatieRepository.GeefReservatie(reservatienummer);
         }
         catch (Exception ex)
         {

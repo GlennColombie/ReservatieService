@@ -1,6 +1,6 @@
 ﻿using ReservatieServiceBL.Exceptions;
 using ReservatieServiceBL.Interfaces;
-using ReservatieServiceBL.Model;
+using ReservatieServiceBL.Entities;
 
 namespace ReservatieServiceBL.Managers;
 
@@ -13,7 +13,11 @@ public class LocatieManager
         _locatieRepository = locatieRepository;
     }
 
-    public void VoegLocatieToe(Locatie locatie)
+    public LocatieManager()
+    {
+    }
+
+    public virtual void VoegLocatieToe(Locatie locatie)
     {
         if (locatie == null) throw new LocatieManagerException("VoegLocatieToe - null");
         try
@@ -27,7 +31,7 @@ public class LocatieManager
         }
     }
 
-    public void UpdateLocatie(Locatie locatie)
+    public virtual void UpdateLocatie(Locatie locatie)
     {
         if (locatie == null) throw new LocatieManagerException("UpdateLocatie - null");
         try
@@ -41,7 +45,7 @@ public class LocatieManager
         }
     }
 
-    public void VerwijderLocatie(Locatie locatie)
+    public virtual void VerwijderLocatie(Locatie locatie)
     {
         if (locatie == null) throw new LocatieManagerException("VerwijderLocatie - null");
         try
@@ -55,12 +59,12 @@ public class LocatieManager
         }
     }
 
-    public Locatie GeefLocatie(Locatie locatie)
+    public virtual Locatie GeefLocatie(Locatie locatie)
     {
         if (locatie == null) throw new LocatieManagerException("GeefLocatie - null");
         try
         {
-            if (!_locatieRepository.BestaatLocatie(locatie)) throw new LocatieManagerException("GeefLocatie - bestaat niet");
+            if (!_locatieRepository.BestaatLocatie(locatie)) _locatieRepository.VoegLocatieToe(locatie);
             return _locatieRepository.GeefLocatie(locatie);
         }
         catch (Exception ex)

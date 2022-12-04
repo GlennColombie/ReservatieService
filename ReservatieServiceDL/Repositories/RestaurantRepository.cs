@@ -2,464 +2,222 @@
 using System.Data.SqlClient;
 using System.IO;
 using ReservatieServiceBL.Interfaces;
-using ReservatieServiceBL.Model;
+using ReservatieServiceBL.Entities;
 using ReservatieServiceDL.Exceptions;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace ReservatieServiceDL.Repositories
 {
     public class RestaurantRepository : IRestaurantRepository
     {
-        private readonly SqlConnection _connection;
+        private readonly ReservatieServiceContext _context;
         public RestaurantRepository(string connectionString)
         {
-            _connection = new(connectionString);
+            _context = new(connectionString);
+        }
+        private void SaveAndClear()
+        {
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
         }
         public bool BestaatRestaurant(Restaurant restaurant)
         {
-            using (SqlCommand cmd = _connection.CreateCommand())
-            {
-                try
-                {
-                    _connection.Open();
-                    cmd.CommandText = $"select count(*) from Restaurant where naam = '{restaurant.Naam}' and locatieid = {restaurant.Locatie.Id} and telefoonnummer = '{restaurant.Telefoonnummer}' and email = '{restaurant.Email}' and keuken = '{restaurant.Keuken}'";
-                    int n = (int)cmd.ExecuteScalar();
-                    return n > 0;
-                }
-                catch (Exception ex)
-                {
-                    throw new RestaurantRepositoryException("GebruikerRegistreren - repo", ex);
-                }
-                finally
-                {
-                    _connection.Close();
-                }
-            }
+            return _context.Restaurants.Any(r => r.Naam == restaurant.Naam && r.Email == restaurant.Email && r.Telefoonnummer == restaurant.Telefoonnummer && r.Locatie == restaurant.Locatie && r.Keuken == restaurant.Keuken);
         }
 
         public bool BestaatRestaurant(int id)
         {
-            using (SqlCommand cmd = _connection.CreateCommand())
-            {
-                try
-                {
-                    _connection.Open();
-                    cmd.CommandText = $"select count(*) from Restaurant where id = {id}";
-                    int n = (int)cmd.ExecuteScalar();
-                    return n > 0;
-                }
-                catch (Exception ex)
-                {
-                    throw new RestaurantRepositoryException("GebruikerRegistreren - repo", ex);
-                }
-                finally
-                {
-                    _connection.Close();
-                }
-            }
+            return _context.Restaurants.AsNoTracking().Any(r => r.Id == id);
         }
 
-        public IReadOnlyList<Restaurant> GeefAlleBestaandeRestaurants()
+        public void UpdateRestaurant(Restaurant restaurant)
         {
-            using (SqlCommand cmd = _connection.CreateCommand())
-            {
-                try
-                {
-                    _connection.Open();
-                    string naam;
-                    string email;
-                    string telefoonnummer;
-                    int postcode;
-                    string gemeente;
-                    string straat;
-                    string huisnummer;
-                    Keuken keuken;
-                    Locatie l = null;
-                    Restaurant r = null;
-                    List<Restaurant> restaurants = new();
-                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer " +
-                        $"from Restaurant r " +
-                        $"left join locatie l on r.locatieid = l.id " +
-                        $"where r.is_visible = 1";
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        naam = (string)reader["naam"];
-                        email = (string)reader["Email"];
-                        telefoonnummer = (string)reader["telefoonnummer"];
-                        postcode = (int)reader["Postcode"];
-                        gemeente = (string)reader["Gemeente"];
-                        straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
-                        huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
-                        keuken = (Enum.Parse<Keuken>((string)reader["keuken"]));
-
-                        l = new(postcode, gemeente, straat, huisnummer);
-                        l.ZetId((int)reader["LocatieId"]);
-
-                        r = new(naam, l, telefoonnummer, email, keuken);
-                        r.ZetId((int)reader["RestaurantId"]);
-                        restaurants.Add(r);
-                    }
-                    reader.Close();
-                    return restaurants;
-                }
-                catch (Exception ex)
-                {
-                    throw new RestaurantRepositoryException("GeefAlleRestaurants - repo", ex);
-                }
-                finally
-                {
-                    _connection.Close();
-                }
-            }
+            _context.Restaurants.Update(restaurant);
+            SaveAndClear();
         }
 
-
-
-        // WERKT
-        public IReadOnlyList<Restaurant> GeefAlleRestaurants()
+        public void VerwijderRestaurant(Restaurant restaurant)
         {
-            using SqlCommand cmd = _connection.CreateCommand();
-            try
-            {
-                _connection.Open();
-                List<Restaurant> restaurants = new();
-                Dictionary<int, Locatie> locaties = new();
-                int restaurantIdOld = -1;
-                Restaurant r = null;
-                Tafel t = null;
-                cmd.CommandText = "select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer, t.Tafelnummer, t.aantalplaatsen, t.isbezet " +
-                    "from Restaurant r " +
-                    "left join locatie l on r.locatieid = l.id " +
-                    "left join tafel t on r.id = t.restaurantid " +
-                    "where t.is_visible = 1 " +
-                    "order by r.id";
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    int restaurantId = (int)reader["RestaurantId"];
-                    if (restaurantId != restaurantIdOld)
-                    {
-                        Locatie l = null;
-                        if (reader["LocatieId"] is int locId && !locaties.TryGetValue(locId, out l))
-                        {
-                            //TODO: get location fields
-                            int postcode = (int)reader["Postcode"];
-                            string gemeente = (string)reader["Gemeente"];
-                            string straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
-                            string huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
-                            l = new(locId, postcode, gemeente, straat, huisnummer);
-                            locaties.Add(locId, l);
-                        }
-
-                        //TODO: get restaurant fields
-                        Keuken keuken = (Enum.Parse<Keuken>((string)reader["keuken"]));
-                        string naam = (string)reader["naam"];
-                        string email = (string)reader["Email"];
-                        string telefoonnummer = (string)reader["telefoonnummer"];
-                        r = new(restaurantId, naam, l, telefoonnummer, email, keuken);
-                        restaurants.Add(r);
-                        restaurantIdOld = restaurantId;
-                    }
-                    if (reader["Tafelnummer"] is int tafelnummer)
-                    {
-                        //TODO: get table fields
-                        // No need to test whether this is a new table. Tables are unique.
-                        int aantalPlaatsen = (int)reader["AantalPlaatsen"];
-                        bool isBezet = (bool)reader["IsBezet"];
-                        t = new(tafelnummer, aantalPlaatsen, isBezet, restaurantId);
-                        r.VoegTafelToe(t);
-                    }
-                }
-                reader.Close();
-                return restaurants;
-            }
-            catch (Exception ex)
-            {
-                throw new RestaurantRepositoryException("GebruikerRegistreren - repo", ex);
-            }
-            finally
-            {
-                _connection.Close();
-            }
+            _context.Restaurants.Remove(restaurant);
+            SaveAndClear();
         }
 
-
-        // ??
-        public IReadOnlyList<Tafel> GeefAlleTafelsVanRestaurant(int id)
+        public void VoegRestaurantToe(Restaurant restaurant)
         {
-            using SqlCommand cmd = _connection.CreateCommand();
-            try
-            {
-                _connection.Open();
-                int tafelnummer;
-                int aantalPlaatsen;
-                bool isBezet = true;
-                cmd.CommandText = $"SELECT * FROM Tafel WHERE RestaurantId = {id} and is_visible = 1";
-                SqlDataReader reader = cmd.ExecuteReader();
-                List<Tafel> tafels = new();
-                while (reader.Read())
-                {
-                    tafelnummer = (int)reader["Tafelnummer"];
-                    aantalPlaatsen = (int)reader["AantalPlaatsen"];
-                    isBezet = (bool)reader["IsBezet"];
-                    Tafel t = new(tafelnummer, aantalPlaatsen, isBezet, id);
-                    tafels.Add(t);
-                }
-                reader.Close();
-                return tafels;
-            }
-            catch (Exception ex)
-            {
-                throw new RestaurantRepositoryException("GebruikerRegistreren - repo", ex);
-            }
-            finally
-            {
-                _connection.Close();
-            }
+            _context.Restaurants.Add(restaurant);
+            _context.Entry(restaurant.Locatie).State = EntityState.Unchanged;
+            SaveAndClear();
         }
 
-        // WERKT
+        public IReadOnlyList<Restaurant> GeefRestaurants()
+        {
+            return _context.Restaurants.Where(r => r.IsVisible == 1).Include(r => r.Locatie).Include(r => r.Reservaties).AsNoTracking().ToList();
+        }
+
         public Restaurant GeefRestaurant(int id)
         {
-            using (SqlCommand cmd = _connection.CreateCommand())
-            {
-                try
-                {
-                    _connection.Open();
-                    int tafelnummerOld = -1;
-                    int tafelnummer = 0;
-                    int aantalPlaatsen = 0;
-                    bool isBezet = false;
-                    bool first = true;
-                    Locatie l = null;
-                    Restaurant r = null;
-                    List<Tafel> tafels = new();
-                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer, t.Tafelnummer, t.aantalplaatsen, t.isbezet " +
-                        $"from Restaurant r " +
-                        $"left join locatie l on r.locatieid = l.id " +
-                        $"left join tafel t on r.id = t.restaurantid " +
-                        $"where r.id = {id} and t.is_visible = 1";
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        if (r == null)
-                        {
-                            int postcode = (int)reader["Postcode"];
-                            string gemeente = (string)reader["Gemeente"];
-                            string straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
-                            string huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
-                            Keuken keuken = (Enum.Parse<Keuken>((string)reader["keuken"]));
-                            string naam = (string)reader["naam"];
-                            string email = (string)reader["Email"];
-                            string telefoonnummer = (string)reader["telefoonnummer"];
+            return _context.Restaurants.Include(r => r.Locatie).Include(r => r.Tafels).Include(r => r.Reservaties).ThenInclude(r => r.Gebruiker.Locatie).Include(r => r.Reservaties).ThenInclude(r => r.Tafel).AsNoTracking().FirstOrDefault(r => r.Id == id);
+        }
 
-                            l = new(postcode, gemeente, straat, huisnummer);
-                            l.ZetId((int)reader["LocatieId"]);
-
-                            r = new(naam, l, telefoonnummer, email, keuken);
-                            r.ZetId((int)reader["RestaurantId"]);
-                        }
-
-                        if (!reader.IsDBNull(reader.GetOrdinal("Tafelnummer"))) // heeft tafels
-                        {
-                            tafelnummer = (int)reader["Tafelnummer"];
-                            if (tafelnummer != tafelnummerOld)
-                            {
-                                // Nieuwe tafel of de eerste
-                                if (tafelnummerOld > 0)
-                                {
-                                    // Maak tafel, einde bereikt
-                                    Tafel t = new(tafelnummerOld, aantalPlaatsen, isBezet, id);
-                                    r.VoegTafelToe(t);
-                                }
-                                first = true;
-                                tafelnummerOld = tafelnummer;
-                            }
-                            if (first)
-                            {
-                                aantalPlaatsen = (int)reader["AantalPlaatsen"];
-                                isBezet = (bool)reader["IsBezet"];
-                                first = false;
-                            }
-                        }
-
-                    }
-                    reader.Close();
-                    if (tafelnummer > 0)
-                    {
-                        Tafel t = new(tafelnummer, aantalPlaatsen, isBezet, id);
-                        r.VoegTafelToe(t);
-                    }
-                    return r;
-                }
-                catch (Exception ex)
-                {
-                    throw new RestaurantRepositoryException("GebruikerRegistreren - repo", ex);
-                }
-                finally
-                {
-                    _connection.Close();
-                }
-            }
+        public IReadOnlyList<Tafel> GeefAlleTafelsVanRestaurant(Restaurant restaurant)
+        {
+            return _context.Tafels.Where(t => t.RestaurantId == restaurant.Id && t.IsVisible == 1).AsNoTracking().ToList();
         }
 
         public IReadOnlyList<Restaurant> GeefRestaurants(int? postcode, Keuken? keuken)
         {
-            using SqlCommand cmd = _connection.CreateCommand();
+            return _context.Restaurants.Include(r => r.Locatie).Where(r => (postcode == null || r.Locatie.Postcode == postcode) && (keuken == null || r.Keuken == keuken)).AsNoTracking().ToList();
+        }
+
+        public void VoegTafelToe(Tafel tafel, Restaurant restaurant)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var r = _context.Restaurants.Find(restaurant.Id);
+                    tafel.Restaurant = r;
+                    tafel.ZetRestaurantId();
+                    r.Tafels.Add(tafel);
+                    _context.Tafels.Add(tafel);
+                    SaveAndClear();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    throw new RestaurantRepositoryException("VoegTafelToe - repo", ex);
+                }
+            }
+        }
+        public void VerwijderTafel(Tafel tafel, Restaurant restaurant)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    Tafel db = _context.Tafels.Find(tafel.Tafelnummer, restaurant.Id);
+                    _context.Tafels.Remove(db);
+                    SaveAndClear();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    throw new RestaurantRepositoryException("VoegTafelToe - repo", ex);
+                }
+            }
+        }
+        public Tafel GeefTafel(int tafelnummer, Restaurant restaurant)
+        {
+            return _context.Tafels.Include(t => t.Restaurant).AsNoTracking().FirstOrDefault(t => t.Tafelnummer == tafelnummer);
+        }
+        public void UpdateTafel(Tafel tafel, Restaurant restaurant)
+        {
+            Tafel db = _context.Tafels.Find(tafel.Tafelnummer, restaurant.Id);
+            db.ZetAantalPlaatsen(tafel.AantalPlaatsen);
+            db.ZetTafelnummer(tafel.Tafelnummer);
+            SaveAndClear();
+        }
+        public bool BestaatTafel(int tafelnummer, Restaurant restaurant)
+        {
+            return _context.Tafels.Any(t => t.Tafelnummer == tafelnummer && t.RestaurantId == restaurant.Id && t.IsVisible == 1);
+        }
+        public IReadOnlyList<Restaurant> GeefRestaurantsMetVrijeTafels(DateTime datum, int aantalPersonen)
+        {
             try
             {
-                _connection.Open();
-                List<Restaurant> restaurants = new();
-                Dictionary<int, Locatie> locaties = new();
-                int restaurantIdOld = -1;
-                Restaurant r = null;
-                Tafel t = null;
-                if (postcode.HasValue && postcode.Value != 0 && keuken.HasValue)
+                var r = _context.Restaurants
+                    .Include(r => r.Locatie)
+                    .ToList();
+                foreach (var a in r)
                 {
-                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer, t.Tafelnummer, t.aantalplaatsen, t.isbezet " +
-                        $"from Restaurant r " +
-                        $"left join locatie l on r.locatieid = l.id " +
-                        $"left join tafel t on r.id = t.restaurantid " +
-                        $"where l.postcode = {postcode} and r.keuken = '{keuken}' and r.is_visible = 1 and t.is_visible = 1 " +
-                        $"order by RestaurantId";
+                    _context.Entry(a)
+                        .Collection(b => b.Tafels)
+                        .Query().OrderBy(t => t.AantalPlaatsen).Where(t => t.AantalPlaatsen >= aantalPersonen && !t.Reservaties.Any(res => res.Uur.AddHours(-1.5) >= datum || res.Einduur <= datum)).Take(1)
+                        .Load();
                 }
-                else if (postcode.HasValue && postcode.Value != 0)
-                {
-                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer, t.Tafelnummer, t.aantalplaatsen, t.isbezet " +
-                        $"from Restaurant r " +
-                        $"left join locatie l on r.locatieid = l.id " +
-                        $"left join tafel t on r.id = t.restaurantid " +
-                        $"where l.postcode = {postcode} and r.is_visible = 1 and t.is_visible = 1 " +
-                        $"order by RestaurantId";
-                }
-                else if (keuken.HasValue)
-                {
-                    cmd.CommandText = $"select r.Id RestaurantId, r.naam, r.email, r.telefoonnummer, r.keuken, l.id locatieid, l.postcode, l.gemeente, l.straat, l.huisnummer, t.Tafelnummer, t.aantalplaatsen, t.isbezet " +
-                        $"from Restaurant r " +
-                        $"left join locatie l on r.locatieid = l.id " +
-                        $"left join tafel t on r.id = t.restaurantid " +
-                        $"where r.keuken = '{keuken}' and r.is_visible = 1 and t.is_visible = 1 " +
-                        $"order by RestaurantId";
-                }
-                else throw new RestaurantRepositoryException("GeefRestaurants - repo - geen params");
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    int restaurantId = (int)reader["RestaurantId"];
-                    if (restaurantId != restaurantIdOld)
-                    {
-                        Locatie l = null;
-                        if (reader["LocatieId"] is int locId && !locaties.TryGetValue(locId, out l))
-                        {
-                            //TODO: get location fields
-                            //int postcode = (int)reader["Postcode"];
-                            string gemeente = (string)reader["Gemeente"];
-                            string straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
-                            string huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
-                            l = new(locId, (int)reader["postcode"], gemeente, straat, huisnummer);
-                            locaties.Add(locId, l);
-                        }
-
-                        //TODO: get restaurant fields
-                        //Keuken keuken = (Enum.Parse<Keuken>((string)reader["keuken"]));
-                        string naam = (string)reader["naam"];
-                        string email = (string)reader["Email"];
-                        string telefoonnummer = (string)reader["telefoonnummer"];
-                        r = new(restaurantId, naam, l, telefoonnummer, email, Enum.Parse<Keuken>((string)reader["keuken"]));
-                        restaurants.Add(r);
-                        restaurantIdOld = restaurantId;
-                    }
-                    if (reader["Tafelnummer"] is int tafelnummer)
-                    {
-                        //TODO: get table fields
-                        // No need to test whether this is a new table. Tables are unique.
-                        int aantalPlaatsen = (int)reader["AantalPlaatsen"];
-                        bool isBezet = (bool)reader["IsBezet"];
-                        t = new(tafelnummer, aantalPlaatsen, isBezet, restaurantId);
-                        r.VoegTafelToe(t);
-                    }
-                }
-                reader.Close();
-                return restaurants;
+                return r;
             }
             catch (Exception ex)
             {
-                throw new RestaurantRepositoryException("GeefRestaurants - repo", ex);
-            }
-            finally
-            {
-                _connection.Close();
+                throw new RestaurantRepositoryException("GeefRestaurantsMetVrijeTafels - repo", ex);
             }
         }
-
-        // ??
-        public void UpdateRestaurant(Restaurant restaurant)
+        public IReadOnlyList<Restaurant> GeefRestaurantsMetVrijeTafels(DateTime datum, int aantalPersonen, int postcode)
         {
-            using (SqlCommand cmd = _connection.CreateCommand())
+            try
             {
-                try
+                var r = _context.Restaurants
+                    .Include(r => r.Locatie)
+                    .Where(r => r.Locatie.Postcode == postcode)
+                    .ToList();
+                foreach (var a in r)
                 {
-                    _connection.Open();
-                    cmd.CommandText = $"update restaurant set naam = '{restaurant.Naam}', email = '{restaurant.Email}', telefoonnummer = '{restaurant.Telefoonnummer}', keuken = '{restaurant.Keuken}' where id = {restaurant.Id}";
-                    cmd.ExecuteNonQuery();
+                    _context.Entry(a)
+                        .Collection(b => b.Tafels)
+                        .Query().OrderByDescending(t => t.Tafelnummer).Where(t => t.AantalPlaatsen >= aantalPersonen && !t.Reservaties.Any(res => res.Uur.AddHours(-1.5) >= datum || res.Einduur <= datum)).Take(1)
+                        .Load();
                 }
-                catch (Exception ex)
-                {
-                    throw new GebruikerRepositoryException("GeefGebruikers - repo", ex);
-                }
-                finally
-                {
-                    _connection.Close();
-                }
+                return r;
+            }
+            catch (Exception ex)
+            {
+                throw new RestaurantRepositoryException("GeefRestaurantsMetVrijeTafels - repo", ex);
             }
         }
-
-        // ??
-        public void VerwijderRestaurant(Restaurant restaurant)
+        public IReadOnlyList<Restaurant> GeefRestaurantsMetVrijeTafels(DateTime datum, int aantalPersonen, Keuken keuken)
         {
-            using (SqlCommand cmd = _connection.CreateCommand())
+            try
             {
-                try
+                var r = _context.Restaurants
+                    .Include(r => r.Locatie)
+                    .Where(r => r.Keuken == keuken)
+                    .ToList();
+                foreach (var a in r)
                 {
-                    _connection.Open();
-                    cmd.CommandText = $"update restaurant set is_visible = 0 where id = {restaurant.Id}";
-                    cmd.ExecuteNonQuery();
+                    _context.Entry(a)
+                        .Collection(b => b.Tafels)
+                        .Query().OrderByDescending(t => t.Tafelnummer).Where(t => t.AantalPlaatsen >= aantalPersonen && !t.Reservaties.Any(res => res.Uur.AddHours(-1.5) >= datum || res.Einduur <= datum)).Take(1)
+                        .Load();
                 }
-                catch (Exception ex)
-                {
-                    throw new GebruikerRepositoryException("GeefGebruikers - repo", ex);
-                }
-                finally
-                {
-                    _connection.Close();
-                }
+                return r;
+            }
+            catch (Exception ex)
+            {
+                throw new RestaurantRepositoryException("GeefRestaurantsMetVrijeTafels - repo", ex);
             }
         }
-
-        // ??
-        public void VoegRestaurantToe(Restaurant restaurant)
+        public IReadOnlyList<Restaurant> GeefRestaurantsMetVrijeTafels(DateTime datum, int aantalPersonen, int postcode, Keuken keuken)
         {
-            using (SqlCommand cmd = _connection.CreateCommand())
+            try
             {
-                try
+                var r = _context.Restaurants
+                    .Include(r => r.Locatie)
+                    .Where(r => r.Locatie.Postcode == postcode && r.Keuken == keuken)
+                    .ToList();
+                foreach (var a in r)
                 {
-                    _connection.Open();
-                    cmd.CommandText = $"insert into restaurant (naam, email, telefoonnummer, locatieid, keuken, is_visible) " +
-                        $" output inserted.id values ('{restaurant.Naam}', '{restaurant.Email}', '{restaurant.Telefoonnummer}', {restaurant.Locatie.Id}, '{restaurant.Keuken}', 1)";
-                    int id = (int)cmd.ExecuteScalar();
-                    restaurant.ZetId(id);
+                    _context.Entry(a)
+                        .Collection(b => b.Tafels)
+                        .Query().OrderByDescending(t => t.Tafelnummer).Where(t => t.AantalPlaatsen >= aantalPersonen && !t.Reservaties.Any(res => res.Uur.AddHours(-1.5) >= datum || res.Einduur <= datum)).Take(1)
+                        .Load();
                 }
-                catch (Exception ex)
-                {
-                    throw new GebruikerRepositoryException("GeefGebruikers - repo", ex);
-                }
-                finally
-                {
-                    _connection.Close();
-                }
+                return r;
             }
+            catch (Exception ex)
+            {
+                throw new RestaurantRepositoryException("GeefRestaurantsMetVrijeTafels - repo", ex);
+            }
+        }
+        public IReadOnlyList<Reservatie> GeefReservatiesRestaurant(Restaurant restaurant, DateTime datum)
+        {
+            return _context.Reservaties.Where(r => r.Restaurant == restaurant && r.Datum == datum).Include(r => r.Gebruiker.Locatie).Include(r => r.Tafel).AsNoTracking().ToList();
+        }
+        public IReadOnlyList<Reservatie> GeefReservatiesRestaurant(Restaurant restaurant, DateTime datum, DateTime einddatum)
+        {
+            return _context.Reservaties.Where(r => r.Restaurant == restaurant && r.Datum >= datum && r.Datum <= einddatum).Include(r => r.Gebruiker.Locatie).Include(r => r.Tafel).AsNoTracking().ToList();
         }
     }
 }

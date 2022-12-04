@@ -1,289 +1,108 @@
 ﻿using System.Data.SqlClient;
 using System.IO;
 using ReservatieServiceBL.Interfaces;
-using ReservatieServiceBL.Model;
+using ReservatieServiceBL.Entities;
 using ReservatieServiceDL.Exceptions;
+using ReservatieServiceDL.Repositories;
+using Microsoft.EntityFrameworkCore;
 
-namespace ReservatieServiceDL;
+namespace ReservatieServiceDL.Repositories;
 
 public class GebruikerRepository : IGebruikerRepository
 {
-    private readonly SqlConnection _connection;
+    private readonly ReservatieServiceContext _context;
 
     public GebruikerRepository(string connectionString)
     {
-        _connection = new SqlConnection(connectionString);
+        _context = new(connectionString);
     }
 
+    private void SaveAndClear()
+    {
+        _context.SaveChanges();
+        _context.ChangeTracker.Clear();
+    }
     public void GebruikerRegistreren(Gebruiker gebruiker)
     {
-        using (SqlCommand cmd = _connection.CreateCommand())
+        if (gebruiker == null) throw new GebruikerRepositoryException("GebruikerRegistreren - null");
+        try
         {
-            try
-            {
-                _connection.Open();
-                cmd.CommandText = $"INSERT INTO Gebruiker (Naam, Email, Telefoonnummer, LocatieId, Is_visible) output INSERTED.Id VALUES ('{gebruiker.Naam}', '{gebruiker.Email}', '{gebruiker.Telefoonnummer}', '{gebruiker.Locatie.Id}', 1)";
-                int id = (int)cmd.ExecuteScalar();
-                gebruiker.ZetId(id);
-            }
-            catch (Exception ex)
-            {
-                throw new GebruikerRepositoryException("GebruikerRegistreren - repo", ex);
-            }
-            finally
-            {
-                _connection.Close();
-            }
+            _context.Gebruikers.Add(gebruiker);
+            _context.Entry(gebruiker.Locatie).State = EntityState.Unchanged;
+            SaveAndClear();
+        }
+        catch (Exception ex)
+        {
+            throw new GebruikerRepositoryException("GebruikerRegistreren - repo", ex);
         }
     }
 
     public void UpdateGebruiker(Gebruiker gebruiker)
     {
-        using (SqlCommand cmd = _connection.CreateCommand())
-        {
-            try
-            {
-                _connection.Open();
-                cmd.CommandText = $"UPDATE Gebruiker SET Naam = '{gebruiker.Naam}', Email = '{gebruiker.Email}', Telefoonnummer = '{gebruiker.Telefoonnummer}', LocatieId = {gebruiker.Locatie.Id} " +
-                    $"WHERE Id = {gebruiker.Id}";
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                throw new GebruikerRepositoryException("UpdateGebruiker - repo", ex);
-            }
-            finally
-            {
-                _connection.Close();
-            }
-        }
+        var gebruikerInDb = _context.Gebruikers.Find(gebruiker.GebruikerId);
+        gebruikerInDb.ZetNaam(gebruiker.Naam);
+        gebruikerInDb.ZetEmail(gebruiker.Email);
+        gebruikerInDb.ZetTelefoonnummer(gebruiker.Telefoonnummer);
+        _context.Gebruikers.Update(gebruikerInDb);
+        SaveAndClear();
     }
 
     public void VerwijderGebruiker(Gebruiker gebruiker)
     {
-        using (SqlCommand cmd = _connection.CreateCommand())
-        {
-            try
-            {
-                _connection.Open();
-                cmd.CommandText = $"UPDATE Gebruiker SET Is_visible = 0 " +
-                    $" WHERE Id = '{gebruiker.Id}'";
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                throw new GebruikerRepositoryException("VerwijderGebruiker - repo", ex);
-            }
-            finally
-            {
-                _connection.Close();
-            }
-        }
+        _context.Gebruikers.Remove(gebruiker);
+        SaveAndClear();
     }
 
     public bool BestaatGebruiker(Gebruiker gebruiker)
     {
-        using (SqlCommand cmd = _connection.CreateCommand())
+        try
         {
-            try
-            {
-                _connection.Open();
-                cmd.CommandText = $"SELECT count(*) FROM Gebruiker WHERE Naam = '{gebruiker.Naam}' AND Email = '{gebruiker.Email}' AND Telefoonnummer = '{gebruiker.Telefoonnummer}' AND LocatieId = {gebruiker.Locatie.Id}";
-                int n = (int)cmd.ExecuteScalar();
-                return n > 0;
-            }
-            catch (Exception ex)
-            {
-                throw new GebruikerRepositoryException("BestaatGebruiker - repo", ex);
-            }
-            finally
-            {
-                _connection.Close();
-            }
+            return _context.Gebruikers.Any(g => g.Naam == gebruiker.Naam && g.Email == gebruiker.Email && g.Telefoonnummer == gebruiker.Telefoonnummer && g.Locatie == gebruiker.Locatie);
+        }
+        catch (Exception ex)
+        {
+            throw new GebruikerRepositoryException("BestaatGebruiker - repo", ex);
         }
     }
 
     public bool BestaatGebruiker(int id)
     {
-        using (SqlCommand cmd = _connection.CreateCommand())
-        {
-            try
-            {
-                _connection.Open();
-                cmd.CommandText = $"SELECT count(*) FROM Gebruiker WHERE Id = {id}";
-                int n = (int)cmd.ExecuteScalar();
-                return n > 0;
-            }
-            catch (Exception ex)
-            {
-                throw new GebruikerRepositoryException("BestaatGebruiker - repo", ex);
-            }
-            finally
-            {
-                _connection.Close();
-            }
-        }
+        return _context.Gebruikers.Any(g => g.GebruikerId == id);
     }
 
     public Gebruiker GeefGebruiker(int id)
     {
-        using (SqlCommand cmd = _connection.CreateCommand())
+        try
         {
-            try
-            {
-                _connection.Open();
-                string naam;
-                string email;
-                string telefoonnummer;
-                int postcode;
-                string gemeente;
-                string straat;
-                string huisnummer;
-                Locatie l = null;
-                Gebruiker g = null;
-                cmd.CommandText = $"SELECT g.Id, g.Naam, g.Email, g.Telefoonnummer, l.Id LocatieId, l.Postcode, l.Gemeente, l.straat, l.huisnummer" +
-                    $" FROM Gebruiker g" +
-                    $" left JOIN Locatie l" +
-                    $" ON g.LocatieId = l.Id" +
-                    $" WHERE g.Id = {id}";
-                SqlDataReader reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    naam = (string)reader["Naam"];
-                    email = (string)reader["Email"];
-                    telefoonnummer = (string)reader["Telefoonnummer"];
-                    postcode = (int)reader["Postcode"];
-                    gemeente = (string)reader["Gemeente"];
-                    straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
-                    huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
-                    
-                    l = new(postcode, gemeente, straat, huisnummer);
-                    l.ZetId((int)reader["LocatieId"]);
-                    
-                    g = new(naam, email, telefoonnummer, l);
-                    g.ZetId((int)reader["Id"]);
-                }
-                reader.Close();
-                return g;
-            }
-            catch (Exception ex)
-            {
-                throw new GebruikerRepositoryException("GeefGebruiker - repo", ex);
-            }
-            finally
-            {
-                _connection.Close();
-            }
+            return _context.Gebruikers.Where(g => g.GebruikerId == id).Include(g => g.Locatie).Include(g => g.Reservaties).ThenInclude(r => r.Tafel).Include(g => g.Reservaties).ThenInclude(r => r.Restaurant.Locatie).AsNoTracking().FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            throw new GebruikerRepositoryException("GeefGebruiker - repo", ex);
         }
     }
 
-    public IReadOnlyList<Reservatie> ZoekReservaties(DateTime? begindatum, DateTime? einddatum)
+    public IReadOnlyList<Reservatie> GeefReservaties(Gebruiker gebruiker, DateTime? begindatum, DateTime? einddatum)
     {
-        throw new NotImplementedException();
-    }
-
-    public IReadOnlyList<Reservatie> GeefReservaties(DateTime? begindatum, DateTime? einddatum)
-    {
-        throw new NotImplementedException();
+        try
+        {
+            return _context.Reservaties.Where(r => r.Gebruiker == gebruiker && r.Datum >= begindatum && r.Datum <= einddatum).Include(r => r.Restaurant.Locatie).Include(r => r.Tafel).AsNoTracking().ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new GebruikerRepositoryException("GeefReservaties - repo", ex);
+        }
     }
 
     public IReadOnlyList<Gebruiker> GeefGebruikers()
     {
-        using (SqlCommand cmd = _connection.CreateCommand())
+        try
         {
-            try
-            {
-                List<Gebruiker> gebruikers = new();
-                string naam;
-                string email;
-                string telefoonnummer;
-                int postcode;
-                string gemeente;
-                string straat;
-                string huisnummer;
-                Locatie l = null;
-                Gebruiker g = null;
-                _connection.Open();
-                cmd.CommandText = $"SELECT g.Id GebruikerId, g.Naam, g.Email, g.Telefoonnummer, l.Id LocatieId, l.Gemeente, l.Postcode, l.Straat, l.Huisnummer FROM Gebruiker g left join Locatie l on g.LocatieId = l.Id";
-                SqlDataReader reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    naam = (string)reader["Naam"];
-                    email = (string)reader["Email"];
-                    telefoonnummer = (string)reader["Telefoonnummer"];
-                    postcode = (int)reader["Postcode"];
-                    gemeente = (string)reader["Gemeente"];
-                    straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
-                    huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
-
-                    l = new(postcode, gemeente, straat, huisnummer);
-                    l.ZetId((int)reader["LocatieId"]);
-
-                    g = new(naam, email, telefoonnummer, l);
-                    g.ZetId((int)reader["GebruikerId"]);
-                    gebruikers.Add(g);
-                }
-                reader.Close();
-                return gebruikers;
-            }
-            catch (Exception ex)
-            {
-                throw new GebruikerRepositoryException("GeefGebruikers - repo", ex);
-            }
-            finally
-            {
-                _connection.Close();
-            }
+            return _context.Gebruikers.Include(g => g.Locatie).Include(g => g.Reservaties).AsNoTracking().ToList();
         }
-    }
-
-    public IReadOnlyList<Gebruiker> GeefBestaandeGebruikers()
-    {
-        using (SqlCommand cmd = _connection.CreateCommand())
+        catch (Exception ex)
         {
-            try
-            {
-                List<Gebruiker> gebruikers = new();
-                string naam;
-                string email;
-                string telefoonnummer;
-                int postcode;
-                string gemeente;
-                string straat;
-                string huisnummer;
-                Locatie l = null;
-                Gebruiker g = null;
-                _connection.Open();
-                cmd.CommandText = $"SELECT g.Id GebruikerId, g.Naam, g.Email, g.Telefoonnummer, l.Id LocatieId, l.Gemeente, l.Postcode, l.Straat, l.Huisnummer FROM Gebruiker g left join Locatie l on g.LocatieId = l.Id where is_visible = 1";
-                SqlDataReader reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    naam = (string)reader["Naam"];
-                    email = (string)reader["Email"];
-                    telefoonnummer = (string)reader["Telefoonnummer"];
-                    postcode = (int)reader["Postcode"];
-                    gemeente = (string)reader["Gemeente"];
-                    straat = reader["Straat"] == DBNull.Value ? null : (string)reader["Straat"];
-                    huisnummer = reader["Huisnummer"] == DBNull.Value ? null : (string)reader["Huisnummer"];
-
-                    l = new(postcode, gemeente, straat, huisnummer);
-                    l.ZetId((int)reader["LocatieId"]);
-
-                    g = new(naam, email, telefoonnummer, l);
-                    g.ZetId((int)reader["GebruikerId"]);
-                    gebruikers.Add(g);
-                }
-                reader.Close();
-                return gebruikers;
-            }
-            catch (Exception ex)
-            {
-                throw new GebruikerRepositoryException("GeefGebruikers - repo", ex);
-            }
-            finally
-            {
-                _connection.Close();
-            }
+            throw new GebruikerRepositoryException("GeefGebruikers - repo", ex);
         }
     }
 }

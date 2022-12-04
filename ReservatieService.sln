@@ -7,13 +7,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReservatieServiceBL", "Rese
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReservatieServiceDL", "ReservatieServiceDL\ReservatieServiceDL.csproj", "{A7434012-3A15-4276-9A78-027EB92EAE3E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{E46097DF-6637-4137-8895-36327EC15A9E}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReservatieServiceGebruikerRESTService", "ReservatieServiceRESTService\ReservatieServiceGebruikerRESTService.csproj", "{1CB330C2-D890-4F5D-B4CE-CA881EEEA91F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReservatieServiceBeheerderRESTService", "ReservatieServiceBeheerderRESTService\ReservatieServiceBeheerderRESTService.csproj", "{A16284BD-043B-48B4-B9EA-0BC8800CF979}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{17197CAB-3AB9-48E0-B6AC-CE864A13879F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTestsGebruiker", "UnitTestsGebruiker\UnitTestsGebruiker.csproj", "{156BF32C-56E8-4AAA-8B38-D006979756A5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTestsBeheerder", "UnitTestsBeheerder\UnitTestsBeheerder.csproj", "{045EAA6A-AF96-4A24-8D3F-A726913C9DD2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +31,6 @@ Global
 		{A7434012-3A15-4276-9A78-027EB92EAE3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7434012-3A15-4276-9A78-027EB92EAE3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7434012-3A15-4276-9A78-027EB92EAE3E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E46097DF-6637-4137-8895-36327EC15A9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E46097DF-6637-4137-8895-36327EC15A9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E46097DF-6637-4137-8895-36327EC15A9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E46097DF-6637-4137-8895-36327EC15A9E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1CB330C2-D890-4F5D-B4CE-CA881EEEA91F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1CB330C2-D890-4F5D-B4CE-CA881EEEA91F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1CB330C2-D890-4F5D-B4CE-CA881EEEA91F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -41,9 +39,21 @@ Global
 		{A16284BD-043B-48B4-B9EA-0BC8800CF979}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A16284BD-043B-48B4-B9EA-0BC8800CF979}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A16284BD-043B-48B4-B9EA-0BC8800CF979}.Release|Any CPU.Build.0 = Release|Any CPU
+		{156BF32C-56E8-4AAA-8B38-D006979756A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{156BF32C-56E8-4AAA-8B38-D006979756A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{156BF32C-56E8-4AAA-8B38-D006979756A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{156BF32C-56E8-4AAA-8B38-D006979756A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{045EAA6A-AF96-4A24-8D3F-A726913C9DD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{045EAA6A-AF96-4A24-8D3F-A726913C9DD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{045EAA6A-AF96-4A24-8D3F-A726913C9DD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{045EAA6A-AF96-4A24-8D3F-A726913C9DD2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{156BF32C-56E8-4AAA-8B38-D006979756A5} = {17197CAB-3AB9-48E0-B6AC-CE864A13879F}
+		{045EAA6A-AF96-4A24-8D3F-A726913C9DD2} = {17197CAB-3AB9-48E0-B6AC-CE864A13879F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {73DA9168-5D94-4B77-8105-A7C71EBAB8E1}

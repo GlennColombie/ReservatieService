@@ -1,4 +1,4 @@
-﻿namespace ReservatieServiceBL.Model;
+﻿namespace ReservatieServiceBL.Entities;
 
 public enum Keuken
 {

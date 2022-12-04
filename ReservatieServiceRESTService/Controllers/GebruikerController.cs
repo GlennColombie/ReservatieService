@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ReservatieServiceBL.Managers;
-using ReservatieServiceBL.Model;
+using ReservatieServiceBL.Entities;
+using ReservatieServiceGebruikerRESTService.Model.Output;
+using ReservatieServiceGebruikerRESTService.Mappers;
+using ReservatieServiceGebruikerRESTService.Model.Input;
+using ReservatieServiceGebruikerRESTService.MapperInterface;
 
 namespace ReservatieServiceRESTService.Controllers
 {
@@ -10,32 +14,42 @@ namespace ReservatieServiceRESTService.Controllers
     public class GebruikerController : ControllerBase
     {
         private GebruikerManager _gM;
+        private LocatieManager _lM;
+        private IMapToDomain _mapperToDomain;
+        private IMapFromDomain _mapperFromDomain;
 
-        public GebruikerController(GebruikerManager gM)
+        public GebruikerController(IMapToDomain mapper, IMapFromDomain mapper2, GebruikerManager gM, LocatieManager lM)
         {
+            _mapperToDomain = mapper;
+            _mapperFromDomain = mapper2;
             _gM = gM;
+            _lM = lM;
         }
 
-        [HttpGet]
-        public ActionResult<List<Gebruiker>> GetAll()
+        [HttpGet("{gebruikerId}")]
+        public ActionResult<GebruikerRESToutputDTO> Get(int gebruikerId)
         {
+            if (gebruikerId <= 0) return BadRequest("GebruikerId moet groter zijn dan 0");
             try
             {
-                return Ok(_gM.GeefGebruikers());
+                Gebruiker g = _gM.GeefGebruiker(gebruikerId);
+                GebruikerRESToutputDTO dto = _mapperFromDomain.MapFromGebruikerDomain(g);
+                return Ok(dto);
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return NotFound(e.Message);
             }
         }
 
         [HttpPost]
-        public ActionResult<Gebruiker> Post([FromBody] Gebruiker gebruiker)
+        public ActionResult<GebruikerRESToutputDTO> Post([FromBody] GebruikerRESTinputDTO gebruiker)
         {
             if (gebruiker == null) return BadRequest("Gebruiker is null");
             try
             {
-                _gM.GebruikerRegistreren(gebruiker);
+                Gebruiker g = _mapperToDomain.MapToGebruikerDomain(gebruiker, _lM);
+                _gM.GebruikerRegistreren(g);
                 return Ok(gebruiker);
             }
             catch (Exception e)
@@ -45,14 +59,20 @@ namespace ReservatieServiceRESTService.Controllers
         }
 
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody]Gebruiker gebruiker)
+        public IActionResult Put(int id, [FromBody] GebruikerRESTinputUpdateDTO gebruiker)
         {
+            if (id <= 0) return BadRequest("GebruikerId moet groter zijn dan 0");
             if (gebruiker == null) return BadRequest("Gebruiker is null");
-            if (gebruiker.Id != id) return BadRequest("Gebruiker id is niet hetzelfde");
             try
             {
-                _gM.GebruikerUpdaten(gebruiker);
-                return NoContent();
+                if (id != gebruiker.GebruikerId) return BadRequest("Invalid id!");
+                if (_gM.BestaatGebruiker(id))
+                {
+                    Gebruiker g = _mapperToDomain.MapToGebruikerDomain(gebruiker, _lM, _gM);
+                    _gM.GebruikerUpdaten(g);
+                    return CreatedAtAction(nameof(Get), new { gebruikerId = gebruiker.GebruikerId }, _mapperFromDomain.MapFromGebruikerDomain(g));
+                }
+                return NotFound("Gebruiker niet gevonden");
             }
             catch (Exception e)
             {
@@ -63,14 +83,16 @@ namespace ReservatieServiceRESTService.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            if (id <= 0) return BadRequest("GebruikerId moet groter zijn dan 0");
             try
             {
-                _gM.GebruikerVerwijderen(_gM.GeefGebruiker(id));
+                Gebruiker g = _gM.GeefGebruiker(id);
+                _gM.GebruikerVerwijderen(g);
                 return NoContent();
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return NotFound(e.Message);
             }
         }
     }

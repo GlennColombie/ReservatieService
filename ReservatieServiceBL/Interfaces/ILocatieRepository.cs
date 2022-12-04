@@ -1,4 +1,5 @@
-﻿using ReservatieServiceBL.Model;
+﻿using Microsoft.EntityFrameworkCore;
+using ReservatieServiceBL.Entities;
 
 namespace ReservatieServiceBL.Interfaces;
 

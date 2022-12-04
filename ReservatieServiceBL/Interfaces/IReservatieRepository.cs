@@ -1,13 +1,12 @@
-﻿using ReservatieServiceBL.Model;
+﻿using ReservatieServiceBL.Entities;
 
 namespace ReservatieServiceBL.Interfaces;
 
 public interface IReservatieRepository
 {
     void VoegReservatieToe(Reservatie reservatie);
-    void DeleteReservatie(Reservatie reservatie);
+    void AnnuleerReservatie(int reservatieNummer);
     void UpdateReservatie(Reservatie reservatie);
-    Reservatie GeefReservatie(int id);
-    IEnumerable<Reservatie> ZoekReservaties(DateTime? begindatum, DateTime? einddatum);
+    Reservatie GeefReservatie(int reservatienummer);
     bool BestaatReservatie(Reservatie reservatie);
 }
