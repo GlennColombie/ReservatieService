@@ -32,8 +32,8 @@ namespace ReservatieServiceRESTService.Controllers
             if (gebruikerId <= 0) return BadRequest("GebruikerId moet groter zijn dan 0");
             try
             {
-                Gebruiker g = _gM.GeefGebruiker(gebruikerId);
-                GebruikerRESToutputDTO dto = _mapperFromDomain.MapFromGebruikerDomain(g);
+                var g = _gM.GeefGebruiker(gebruikerId);
+                var dto = _mapperFromDomain.MapFromGebruikerDomain(g);
                 return Ok(dto);
             }
             catch (Exception e)
@@ -48,7 +48,7 @@ namespace ReservatieServiceRESTService.Controllers
             if (gebruiker == null) return BadRequest("Gebruiker is null");
             try
             {
-                Gebruiker g = _mapperToDomain.MapToGebruikerDomain(gebruiker, _lM);
+                var g = _mapperToDomain.MapToGebruikerDomain(gebruiker, _lM);
                 _gM.GebruikerRegistreren(g);
                 return Ok(gebruiker);
             }
@@ -66,13 +66,10 @@ namespace ReservatieServiceRESTService.Controllers
             try
             {
                 if (id != gebruiker.GebruikerId) return BadRequest("Invalid id!");
-                if (_gM.BestaatGebruiker(id))
-                {
-                    Gebruiker g = _mapperToDomain.MapToGebruikerDomain(gebruiker, _lM, _gM);
-                    _gM.GebruikerUpdaten(g);
-                    return CreatedAtAction(nameof(Get), new { gebruikerId = gebruiker.GebruikerId }, _mapperFromDomain.MapFromGebruikerDomain(g));
-                }
-                return NotFound("Gebruiker niet gevonden");
+                if (!_gM.BestaatGebruiker(id)) return NotFound("Gebruiker niet gevonden");
+                var g = _mapperToDomain.MapToGebruikerDomain(gebruiker, _lM, _gM);
+                _gM.GebruikerUpdaten(g);
+                return CreatedAtAction(nameof(Get), new { gebruikerId = gebruiker.GebruikerId }, _mapperFromDomain.MapFromGebruikerDomain(g));
             }
             catch (Exception e)
             {
@@ -86,7 +83,7 @@ namespace ReservatieServiceRESTService.Controllers
             if (id <= 0) return BadRequest("GebruikerId moet groter zijn dan 0");
             try
             {
-                Gebruiker g = _gM.GeefGebruiker(id);
+                var g = _gM.GeefGebruiker(id);
                 _gM.GebruikerVerwijderen(g);
                 return NoContent();
             }

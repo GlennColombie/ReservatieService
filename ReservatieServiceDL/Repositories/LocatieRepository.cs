@@ -37,7 +37,7 @@ namespace ReservatieServiceDL.Repositories
             try
             {
                 _context.Locaties.Update(locatie);
-                _context.SaveChanges();
+                SaveAndClear();
             }
             catch (Exception ex)
             {
@@ -51,7 +51,7 @@ namespace ReservatieServiceDL.Repositories
             try
             {
                 _context.Locaties.Remove(locatie);
-                _context.SaveChanges();
+                SaveAndClear();
             }
             catch (Exception ex)
             {
@@ -65,7 +65,7 @@ namespace ReservatieServiceDL.Repositories
             try
             {
                 _context.Locaties.Add(locatie);
-                _context.SaveChanges();
+                SaveAndClear();
             }
             catch (Exception ex)
             {
@@ -83,6 +83,12 @@ namespace ReservatieServiceDL.Repositories
             {
                 throw new LocatieRepositoryException("GeefLocatie - repo", ex);
             }
+        }
+
+        private void SaveAndClear()
+        {
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
         }
     }
 }

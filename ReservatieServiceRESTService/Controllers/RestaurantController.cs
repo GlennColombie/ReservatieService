@@ -28,11 +28,7 @@ namespace ReservatieServiceGebruikerRESTService.Controllers
             try
             {
                 var restaurants = _rM.GeefRestaurants(postcode, keuken);
-                List<RestaurantRESToutputDTO> dto = new();
-                foreach (var restaurant in restaurants)
-                {
-                    dto.Add(_mapperFromDomain.MapFromRestaurantDomain(restaurant));
-                }
+                var dto = restaurants.Select(_mapperFromDomain.MapFromRestaurantDomain).ToList();
                 return Ok(dto);
             }
             catch (Exception e)
@@ -46,16 +42,12 @@ namespace ReservatieServiceGebruikerRESTService.Controllers
         public ActionResult<List<RestaurantRESToutputDTO>> GetRestaurantsMetVrijeTafels(string datum, int aantalPersonen, [FromQuery] int? postcode, [FromQuery] string? keuken)
         {
             if (aantalPersonen < 1) return BadRequest("Aantal personen moet groter zijn dan 0");
-            DateTime d = DateTime.ParseExact(datum, "dd/MM/yyyy H:mm", CultureInfo.InvariantCulture);
+            var d = DateTime.ParseExact(datum, "dd/MM/yyyy H:mm", CultureInfo.InvariantCulture);
             if (d < DateTime.Now) return BadRequest("Datum moet in de toekomst liggen");
             try
             {
                 var restaurants = _rM.GeefRestaurantsMetVrijeTafels(datum, aantalPersonen, postcode, keuken);
-                List<RestaurantRESToutputDTO> dto = new();
-                foreach (var restaurant in restaurants)
-                {
-                    dto.Add(_mapperFromDomain.MapFromRestaurantDomain(restaurant));
-                }
+                var dto = restaurants.Select(_mapperFromDomain.MapFromRestaurantDomain).ToList();
                 return Ok(dto);
             }
             catch (Exception e)

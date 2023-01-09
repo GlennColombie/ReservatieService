@@ -7,7 +7,6 @@ using ReservatieServiceBeheerderRESTService.Model.Input;
 using ReservatieServiceBeheerderRESTService.Model.Output;
 using ReservatieServiceBL.Entities;
 using ReservatieServiceBL.Managers;
-using ReservatieServiceBL.Model;
 
 namespace ReservatieServiceBeheerderRESTService.Controllers
 {

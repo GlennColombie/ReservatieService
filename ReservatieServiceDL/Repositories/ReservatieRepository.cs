@@ -49,7 +49,7 @@ namespace ReservatieServiceDL.Repositories
                 reservatie.Tafel = t;
                 reservatie.ZetTafelNummer();
                 _context.Reservaties.Add(reservatie);
-                _context.SaveChanges();
+                SaveAndClear();
                 transaction.Commit();
             }
             catch (Exception ex)
@@ -65,7 +65,7 @@ namespace ReservatieServiceDL.Repositories
             {
                 var r =  _context.Reservaties.Find(reservatieNummer);
                 _context.Reservaties.Remove(r);
-                _context.SaveChanges();
+                SaveAndClear();
             }
             catch (Exception ex)
             {
@@ -82,7 +82,7 @@ namespace ReservatieServiceDL.Repositories
                 r.ZetUur(reservatie.Uur);
                 r.ZetEinduur();
                 r.ZetAantalPlaatsen(reservatie.AantalPlaatsen);
-                _context.SaveChanges();
+                SaveAndClear();
             }
             catch (Exception ex)
             {
@@ -106,6 +106,12 @@ namespace ReservatieServiceDL.Repositories
             {
                 throw new ReservatieRepositoryException("GeefReservatie", ex);
             }
+        }
+
+        private void SaveAndClear()
+        {
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
         }
     }
 }

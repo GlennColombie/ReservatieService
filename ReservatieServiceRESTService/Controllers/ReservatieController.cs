@@ -38,7 +38,7 @@ namespace ReservatieServiceGebruikerRESTService.Controllers
             if (restaurantId <= 0) return BadRequest("RestaurantId moet groter zijn dan 0");
             try
             {
-                Reservatie r = _mapperToDomain.MapToReservatieDomain(gebruikerId, restaurantId, dto, _gM, _restM, _lM);
+                var r = _mapperToDomain.MapToReservatieDomain(gebruikerId, restaurantId, dto, _gM, _restM, _lM);
                 _rM.VoegReservatieToe(r);
                 return Ok(_mapperFromDomain.MapFromReservatieDomain(r));
             }
@@ -69,7 +69,7 @@ namespace ReservatieServiceGebruikerRESTService.Controllers
             if (reservatieId <= 0) return BadRequest("ReservatieId moet groter zijn dan 0");
             try
             {
-                Reservatie r = _mapperToDomain.MapToReservatieDomain(reservatieId, dto, _rM);
+                var r = _mapperToDomain.MapToReservatieDomain(reservatieId, dto, _rM);
                 _rM.UpdateReservatie(r);
                 return Ok(_mapperFromDomain.MapFromReservatieDomain(r));
             }
@@ -86,14 +86,10 @@ namespace ReservatieServiceGebruikerRESTService.Controllers
             try
             {
                 if (_gM.GeefGebruiker(gebruikerId) == null) return BadRequest("Gebruiker bestaat niet");
-                Gebruiker g = _gM.GeefGebruiker(gebruikerId);
+                var g = _gM.GeefGebruiker(gebruikerId);
                 var gdto = _mapperFromDomain.MapFromGebruikerDomain(g);
-                List<ReservatieRESToutputDTO> reservaties = new();
                 var list = _gM.ZoekReservaties(g, startdatum, einddatum);
-                foreach(var r in _gM.ZoekReservaties(g, startdatum, einddatum))
-                {
-                    reservaties.Add(_mapperFromDomain.MapFromReservatieDomain(r));
-                }
+                var reservaties = _gM.ZoekReservaties(g, startdatum, einddatum).Select(_mapperFromDomain.MapFromReservatieDomain).ToList();
                 return Ok(reservaties);
             }
             catch (Exception ex)
