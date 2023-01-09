@@ -50,7 +50,8 @@ namespace ReservatieServiceRESTService.Controllers
             {
                 var g = _mapperToDomain.MapToGebruikerDomain(gebruiker, _lM);
                 _gM.GebruikerRegistreren(g);
-                return Ok(gebruiker);
+                var geb = _gM.GeefGebruiker(g.Email);
+                return Ok(_mapperFromDomain.MapFromGebruikerDomain(geb));
             }
             catch (Exception e)
             {

@@ -13,4 +13,5 @@ public interface IGebruikerRepository
     Gebruiker GeefGebruiker(int id);
     IReadOnlyList<Reservatie> GeefReservaties(Gebruiker gebruiker, DateTime? begindatum, DateTime? einddatum);
     IReadOnlyList<Gebruiker> GeefGebruikers();
+    Gebruiker GeefGebruiker(string email);
 }

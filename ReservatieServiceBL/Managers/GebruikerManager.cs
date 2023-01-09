@@ -102,6 +102,19 @@ public class GebruikerManager
         }
     }
 
+    public virtual Gebruiker GeefGebruiker(string email)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(email)) throw new GebruikerManagerException("Gebruikersnaam is null of leeg");
+            return _gebruikerRepository.GeefGebruiker(email);
+        }
+        catch (Exception ex)
+        {
+            throw new GebruikerManagerException("Er is een fout opgetreden bij het ophalen van de gebruiker", ex);
+        }
+    }
+
     public virtual IReadOnlyList<Gebruiker> GeefGebruikers()
     {
         try

@@ -105,4 +105,9 @@ public class GebruikerRepository : IGebruikerRepository
             throw new GebruikerRepositoryException("GeefGebruikers - repo", ex);
         }
     }
+
+    public Gebruiker GeefGebruiker(string email)
+    {
+        return _context.Gebruikers.Where(g => g.Email == email).Include(g => g.Locatie).Include(g => g.Reservaties).ThenInclude(r => r.Tafel).Include(g => g.Reservaties).ThenInclude(r => r.Restaurant.Locatie).AsNoTracking().FirstOrDefault();
+    }
 }
